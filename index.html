@@ -89,10 +89,23 @@ body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);mi
   padding:6px 13px;border-radius:8px;color:rgba(255,255,255,0.5);font-size:12px;
   cursor:pointer;transition:all .2s}
 .logout-btn:hover{background:rgba(192,57,43,0.25);border-color:var(--red);color:#ff7675}
+.sidebar-toggle{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  width:36px;height:36px;border-radius:8px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:4px;flex-shrink:0;transition:all .2s;padding:0}
+.sidebar-toggle:hover{background:rgba(200,146,42,0.2);border-color:rgba(200,146,42,0.4)}
+.sidebar-toggle span{display:block;width:16px;height:2px;background:rgba(255,255,255,0.7);
+  border-radius:2px;transition:all .25s}
+.sidebar-toggle.active span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.sidebar-toggle.active span:nth-child(2){opacity:0;transform:scaleX(0)}
+.sidebar-toggle.active span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
 
 .app-body{display:flex;flex:1;overflow:hidden}
-.sidebar{width:200px;background:var(--navy2);flex-shrink:0;padding:16px 10px;
-  display:flex;flex-direction:column;gap:4px}
+.sidebar{width:210px;background:var(--navy2);flex-shrink:0;padding:16px 10px;
+  display:flex;flex-direction:column;gap:4px;
+  transition:width .25s ease, padding .25s ease, opacity .25s ease;
+  overflow:hidden}
+.sidebar.collapsed{width:0;padding:0;opacity:0;pointer-events:none}
+.main-area.expanded{padding-left:24px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;
   border:none;background:transparent;color:rgba(255,255,255,0.55);font-family:'Inter',sans-serif;
   font-size:13px;font-weight:500;cursor:pointer;width:100%;text-align:left;transition:all .15s}
@@ -346,7 +359,12 @@ body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);mi
 <!-- ══ SCREEN: APP ══ -->
 <div class="screen" id="screen-app">
   <div class="topbar">
-    <div class="tb-brand">◆ Competitor Intel</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="tb-brand">◆ Competitor Intel</div>
+    </div>
     <div class="tb-right">
       <div class="period-badge" id="tb-period" onclick="openPeriodModal()">📅 —</div>
       <div class="user-chip">
@@ -677,6 +695,24 @@ function clearLoginError() {
 // ══════════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const toggle  = document.getElementById('sidebar-toggle');
+  const main    = document.getElementById('main-area');
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  toggle.classList.toggle('active', isCollapsed);
+  // Save preference
+  localStorage.setItem('sidebarCollapsed', isCollapsed ? '1' : '0');
+}
+
+function restoreSidebarState() {
+  const collapsed = localStorage.getItem('sidebarCollapsed') === '1';
+  if (collapsed) {
+    document.getElementById('sidebar').classList.add('collapsed');
+    document.getElementById('sidebar-toggle').classList.add('active');
+  }
+}
+
 function buildNav() {
   const role = currentProfile.role;
   const isHO = ['ho','rsm','supervisor'].includes(role);
@@ -691,6 +727,7 @@ function buildNav() {
     ] : []),
   ];
 
+  restoreSidebarState();
   const sidebar = document.getElementById('sidebar');
   sidebar.innerHTML = navItems.map(item => item.section
     ? `<div class="nav-section">${item.section}</div>`
