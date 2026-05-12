@@ -4,20 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dollar Stationery — Competitor Intel Portal</title>
-<script>
-// Robust Supabase loader with fallback CDN
-(function() {
-  var script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  script.onerror = function() {
-    // Fallback to unpkg if jsdelivr fails
-    var s2 = document.createElement('script');
-    s2.src = 'https://unpkg.com/@supabase/supabase-js@2';
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(script);
-})();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -481,17 +468,21 @@ const PRODUCTS = {
 };
 
 function initSupabase() {
-  // ── YOUR SUPABASE CREDENTIALS ──────────────────────────────────
-  // Replace the two values below with your actual Supabase credentials
-  // Get them from: supabase.com → Your Project → Settings → API
   const SUPABASE_URL = 'https://gzsewsxthwceqmuplgoa.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6c2V3c3h0aHdjZXFtdXBsZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTczNTgsImV4cCI6MjA5NDEzMzM1OH0._oCMkqWKU2RMOCMfg7AdkktQU2KiBVdqrOx49drZ9yw';
-  // ───────────────────────────────────────────────────────────────
-  if (!SUPABASE_URL.startsWith('https://') || SUPABASE_URL.includes('YOUR_')) {
-    return false; // credentials not set yet
+  try {
+    // UMD build: window.supabase.createClient is the correct call
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Quick sanity check — db must have .from() and .auth
+    if (typeof db.from !== 'function' || typeof db.auth === 'undefined') {
+      console.error('Supabase client created but missing methods');
+      return false;
+    }
+    return true;
+  } catch(e) {
+    console.error('initSupabase error:', e);
+    return false;
   }
-  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  return true;
 }
 
 // saveConfig removed — credentials are hardcoded in initSupabase()
@@ -527,7 +518,7 @@ async function startup() {
 
 async function loadProfile(user) {
   showLoading('Loading your profile...');
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('profiles').select('*').eq('id', user.id).single();
   if (error || !data) {
     hideLoading();
@@ -1298,11 +1289,11 @@ function toast(msg, type='info') {
   setTimeout(()=>t.remove(), 3800);
 }
 
-// Startup — wrapped in DOMContentLoaded for safety
+// Startup — wait for both DOM and Supabase library to be fully ready
 function safeStartup() {
-  if (typeof window.supabase === 'undefined') {
-    // Supabase not loaded yet, wait 500ms and retry
-    setTimeout(safeStartup, 500);
+  // Check Supabase library is loaded AND createClient is available
+  if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+    setTimeout(safeStartup, 100);
     return;
   }
   startup().catch(function(e) {
@@ -1310,10 +1301,11 @@ function safeStartup() {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f1f3d;color:white;flex-direction:column;gap:16px;font-family:sans-serif;text-align:center;padding:24px"><div style="font-size:48px">⚠️</div><div style="font-size:20px;font-weight:700">Portal loading error</div><div style="color:rgba(255,255,255,0.6);font-size:14px">Error: ' + e.message + '</div><button onclick="location.reload()" style="padding:12px 24px;background:#c8922a;border:none;border-radius:8px;color:#0f1f3d;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">Reload Page</button></div>';
   });
 }
+// Always wait for DOM first, then check Supabase
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', safeStartup);
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(safeStartup, 50); });
 } else {
-  safeStartup();
+  setTimeout(safeStartup, 50);
 }
 </script>
 </body>
