@@ -511,21 +511,53 @@ async function startup() {
 
   // Auth state listener
   db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) await loadProfile(session.user);
-    else if (event === 'SIGNED_OUT') showScreen('screen-login');
+    console.log('Auth event:', event, session ? 'session exists' : 'no session');
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+      await loadProfile(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      showScreen('screen-login');
+    }
   });
 }
 
 async function loadProfile(user) {
   showLoading('Loading your profile...');
-  const { data, error } = await db
-    .from('profiles').select('*').eq('id', user.id).single();
-  if (error || !data) {
+
+  // Try fetching profile — retry once after 1s in case insert is still propagating
+  let data, error;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await db.from('profiles').select('*').eq('id', user.id).single();
+    data = res.data; error = res.error;
+    if (data) break; // got it
+    if (attempt < 2) await new Promise(r => setTimeout(r, 1000)); // wait 1s and retry
+  }
+
+  if (!data) {
+    // Profile genuinely missing — try to create it from auth metadata
+    const meta = user.user_metadata || {};
+    if (meta.full_name) {
+      const { error: insErr } = await db.from('profiles').upsert({
+        id: user.id,
+        full_name: meta.full_name,
+        role: meta.role || 'field',
+        town: meta.town || '',
+        email: user.email
+      }, { onConflict: 'id' });
+      if (!insErr) {
+        // Re-fetch after creating
+        const res2 = await db.from('profiles').select('*').eq('id', user.id).single();
+        data = res2.data;
+      }
+    }
+  }
+
+  if (!data) {
     hideLoading();
     showScreen('screen-login');
-    showError('Profile not found. Contact your administrator.');
+    showError('Profile not found. Please sign up first or contact your administrator. (Error: ' + (error?.message||'unknown') + ')');
     return;
   }
+
   currentUser = user;
   currentProfile = data;
 
@@ -579,22 +611,43 @@ async function doSignup() {
   const pass = document.getElementById('s-pass').value;
   if (!name||!email||!pass||!town) { showError('Please fill all fields'); return; }
   if (pass.length < 8) { showError('Password must be at least 8 characters'); return; }
-  setBtn('btn-signup', true, 'Creating...');
-  const { data, error } = await db.auth.signUp({email, password: pass,
-    options: { data: { full_name: name, role, town }}});
+  setBtn('btn-signup', true, 'Creating account...');
+
+  // Step 1: Create auth user
+  const { data, error } = await db.auth.signUp({
+    email, password: pass,
+    options: { data: { full_name: name, role, town } }
+  });
+  if (error) { setBtn('btn-signup', false, 'Create Account →'); showError(error.message); return; }
+
+  const userId = data?.user?.id;
+  if (!userId) { setBtn('btn-signup', false, 'Create Account →'); showError('Signup failed — no user ID returned. Please try again.'); return; }
+
+  // Step 2: Insert profile directly (do not rely on trigger)
+  setBtn('btn-signup', true, 'Saving profile...');
+  const { error: profError } = await db.from('profiles').upsert({
+    id: userId,
+    full_name: name,
+    role: role,
+    town: town,
+    email: email
+  }, { onConflict: 'id' });
+
   setBtn('btn-signup', false, 'Create Account →');
-  if (error) { showError(error.message); return; }
-  // Insert profile
-  if (data.user) {
-    await db.from('profiles').upsert({
-      id: data.user.id, full_name: name, role, town, email
-    });
+
+  if (profError) {
+    // Profile insert failed — show exact error
+    showError('Account created but profile save failed: ' + profError.message + '. Please contact admin.');
+    return;
   }
+
   clearLoginError();
   document.getElementById('login-info-box').style.display = '';
   document.getElementById('login-info-box').textContent =
-    '✅ Account created! Check your email to verify, then sign in.';
+    '✅ Account created successfully! You can now sign in with your email and password.';
+  // Auto-switch to login tab and prefill email
   setLoginMode('login');
+  document.getElementById('l-email').value = email;
 }
 
 async function doLogout() {
