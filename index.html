@@ -78,31 +78,6 @@ body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);mi
   color:#90caf9;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;
   line-height:1.6}
 
-/* ── CONFIG SCREEN ── */
-#screen-config{flex-direction:column;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,var(--navy),var(--navy2))}
-.config-card{background:white;border-radius:20px;padding:40px;width:520px;box-shadow:var(--shadow-lg)}
-.config-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-  color:var(--navy);margin-bottom:6px}
-.config-sub{color:var(--grey4);font-size:13px;margin-bottom:28px;line-height:1.6}
-.config-step{display:flex;gap:14px;margin-bottom:18px;padding:16px;
-  background:var(--grey1);border-radius:10px;border-left:3px solid var(--gold)}
-.config-step-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-  color:var(--gold);flex-shrink:0;line-height:1}
-.config-step-text{font-size:13px;color:var(--text);line-height:1.6}
-.config-step-text code{background:var(--grey2);padding:2px 6px;border-radius:4px;
-  font-family:'DM Mono',monospace;font-size:12px;color:var(--navy)}
-.config-input-wrap{margin:20px 0}
-.config-input-label{font-size:12px;font-weight:600;color:var(--grey4);
-  text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
-.config-input{width:100%;padding:11px 14px;border:1.5px solid var(--grey3);
-  border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);
-  background:var(--grey1);outline:none;margin-bottom:10px}
-.config-input:focus{border-color:var(--navy)}
-.config-save-btn{width:100%;padding:13px;background:var(--navy);border:none;
-  border-radius:10px;color:white;font-family:'Syne',sans-serif;font-size:15px;
-  font-weight:700;cursor:pointer}
-.config-save-btn:hover{background:var(--navy2)}
 
 /* ── APP SHELL ── */
 #screen-app{flex-direction:column}
@@ -310,33 +285,6 @@ body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);mi
 <!-- ══ TOAST ══ -->
 <div class="toast-box" id="toasts"></div>
 
-<!-- ══ SCREEN: CONFIG (first-run setup) ══ -->
-<div class="screen" id="screen-config">
-  <div class="config-card">
-    <div class="config-title">⚙️ First-Time Setup</div>
-    <div class="config-sub">Connect this portal to your Supabase database. You only do this once — settings are saved in your browser.</div>
-    <div class="config-step">
-      <div class="config-step-num">1</div>
-      <div class="config-step-text">Go to <strong>supabase.com</strong> → Create a free project → Copy your <code>Project URL</code> and <code>anon public key</code> from Settings → API</div>
-    </div>
-    <div class="config-step">
-      <div class="config-step-num">2</div>
-      <div class="config-step-text">Run the SQL setup script from <code>supabase_setup.sql</code> in your Supabase SQL Editor to create all tables, roles, and policies</div>
-    </div>
-    <div class="config-step">
-      <div class="config-step-num">3</div>
-      <div class="config-step-text">Paste your credentials below and click Save. The portal will connect and be ready to use.</div>
-    </div>
-    <div class="config-input-wrap">
-      <div class="config-input-label">Supabase Project URL</div>
-      <input class="config-input" id="cfg-url" placeholder="https://xxxxxxxxxxxx.supabase.co">
-      <div class="config-input-label">Supabase Anon Public Key</div>
-      <input class="config-input" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-    </div>
-    <button class="config-save-btn" onclick="saveConfig()">Save & Connect →</button>
-  </div>
-</div>
-
 <!-- ══ SCREEN: LOGIN ══ -->
 <div class="screen" id="screen-login">
   <div class="login-wrap">
@@ -533,26 +481,20 @@ const PRODUCTS = {
 };
 
 function initSupabase() {
-  const url = localStorage.getItem('sb_url');
-  const key = localStorage.getItem('sb_key');
-  if (url && key) {
-    db = window.supabase.createClient(url, key);
-    return true;
+  // ── YOUR SUPABASE CREDENTIALS ──────────────────────────────────
+  // Replace the two values below with your actual Supabase credentials
+  // Get them from: supabase.com → Your Project → Settings → API
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+  // ───────────────────────────────────────────────────────────────
+  if (!SUPABASE_URL.startsWith('https://') || SUPABASE_URL.includes('YOUR_')) {
+    return false; // credentials not set yet
   }
-  return false;
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return true;
 }
 
-function saveConfig() {
-  const url = document.getElementById('cfg-url').value.trim();
-  const key = document.getElementById('cfg-key').value.trim();
-  if (!url || !key) { alert('Please enter both URL and Key'); return; }
-  if (!url.includes('supabase.co')) { alert('URL should be a Supabase project URL'); return; }
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  db = window.supabase.createClient(url, key);
-  showScreen('screen-login');
-  toast('Connected to Supabase! You can now sign in.','success');
-}
+// saveConfig removed — credentials are hardcoded in initSupabase()
 
 // ══════════════════════════════════════════════════════════════════════
 // STARTUP
@@ -563,7 +505,9 @@ async function startup() {
   TOWNS.forEach(t => td.innerHTML += `<option>${t}</option>`);
 
   if (!initSupabase()) {
-    showScreen('screen-config'); return;
+    // Credentials not set — show developer notice instead of config screen
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f1f3d;color:white;font-family:sans-serif;flex-direction:column;gap:16px;padding:32px;text-align:center"><div style="font-size:48px">🔧</div><div style="font-size:22px;font-weight:700;color:#f0b84a">Supabase Not Configured</div><div style="color:rgba(255,255,255,0.7);font-size:14px;max-width:480px;line-height:1.7">Open <strong>index.html</strong> in a text editor and replace <code style=\'background:rgba(0,0,0,0.4);padding:2px 8px;border-radius:4px;color:#f0b84a\'>YOUR_SUPABASE_URL_HERE</code> and <code style=\'background:rgba(0,0,0,0.4);padding:2px 8px;border-radius:4px;color:#f0b84a\'>YOUR_SUPABASE_ANON_KEY_HERE</code> with your actual credentials from supabase.com → Settings → API</div></div>';
+    return;
   }
 
   // Check existing session
