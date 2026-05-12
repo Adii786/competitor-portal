@@ -535,19 +535,22 @@ async function loadProfile(user) {
   if (!data) {
     // Profile genuinely missing — try to create it from auth metadata
     const meta = user.user_metadata || {};
-    if (meta.full_name) {
-      const { error: insErr } = await db.from('profiles').upsert({
-        id: user.id,
-        full_name: meta.full_name,
-        role: meta.role || 'field',
-        town: meta.town || '',
-        email: user.email
-      }, { onConflict: 'id' });
-      if (!insErr) {
-        // Re-fetch after creating
-        const res2 = await db.from('profiles').select('*').eq('id', user.id).single();
-        data = res2.data;
-      }
+    const profilePayload = {
+      id: user.id,
+      full_name: meta.full_name || user.email.split('@')[0],
+      role: meta.role || 'field',
+      town: meta.town || '',
+      email: user.email
+    };
+    const { error: insErr } = await db.from('profiles').upsert(
+      profilePayload, { onConflict: 'id' }
+    );
+    if (!insErr) {
+      // Re-fetch after creating
+      const res2 = await db.from('profiles').select('*').eq('id', user.id).single();
+      data = res2.data;
+    } else {
+      console.error('Auto-create profile error:', insErr.message);
     }
   }
 
@@ -613,10 +616,12 @@ async function doSignup() {
   if (pass.length < 8) { showError('Password must be at least 8 characters'); return; }
   setBtn('btn-signup', true, 'Creating account...');
 
-  // Step 1: Create auth user
+  // Step 1: Create auth user — store role in user_metadata for JWT-based RLS
   const { data, error } = await db.auth.signUp({
     email, password: pass,
-    options: { data: { full_name: name, role, town } }
+    options: {
+      data: { full_name: name, role: role, town: town }
+    }
   });
   if (error) { setBtn('btn-signup', false, 'Create Account →'); showError(error.message); return; }
 
