@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deployment Guide — Competitor Intel Portal</title>
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#f8f9fb;color:#1a1f2e;margin:0;padding:0}
+.wrap{max-width:860px;margin:0 auto;padding:40px 24px}
+h1{font-size:28px;font-weight:800;color:#0f1f3d;margin-bottom:6px}
+.subtitle{color:#8891a4;margin-bottom:36px;font-size:15px}
+.phase{background:white;border-radius:14px;box-shadow:0 4px 20px rgba(15,31,61,0.08);
+  margin-bottom:24px;overflow:hidden}
+.phase-header{padding:18px 24px;display:flex;align-items:center;gap:14px}
+.phase-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:16px;flex-shrink:0}
+.phase-title{font-size:17px;font-weight:700;color:#0f1f3d}
+.phase-sub{font-size:12px;color:#8891a4;margin-top:2px}
+.ph-blue .phase-header{background:#eff7ff;border-bottom:2px solid #b8d4ef}
+.ph-blue .phase-num{background:#1e6fa8;color:white}
+.ph-green .phase-header{background:#f0fdf4;border-bottom:2px solid #a9dfbf}
+.ph-green .phase-num{background:#1a6b3c;color:white}
+.ph-gold .phase-header{background:#fffdf0;border-bottom:2px solid #f0d080}
+.ph-gold .phase-num{background:#c8922a;color:white}
+.ph-navy .phase-header{background:#e8edf5;border-bottom:2px solid #b8c8e0}
+.ph-navy .phase-num{background:#0f1f3d;color:white}
+.ph-purple .phase-header{background:#f5f0ff;border-bottom:2px solid #c8b0f0}
+.ph-purple .phase-num{background:#4b0082;color:white}
+.steps{padding:20px 24px}
+.step{display:flex;gap:14px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #eef0f4}
+.step:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.step-icon{font-size:20px;flex-shrink:0;width:28px;text-align:center;margin-top:1px}
+.step-body{flex:1}
+.step-label{font-weight:600;font-size:14px;color:#0f1f3d;margin-bottom:5px}
+.step-desc{font-size:13px;color:#5d6d7e;line-height:1.6}
+code{background:#1a1f2e;color:#f0b84a;padding:3px 8px;border-radius:5px;
+  font-family:'Courier New',monospace;font-size:12px}
+.code-block{background:#1a1f2e;color:#e8edf5;padding:16px 18px;border-radius:10px;
+  font-family:'Courier New',monospace;font-size:13px;margin:10px 0;
+  line-height:1.7;overflow-x:auto;white-space:pre}
+.code-block .comment{color:#6a8faf}
+.code-block .highlight{color:#f0b84a;font-weight:bold}
+.tip{background:#fff8e1;border-left:3px solid #f0c030;padding:12px 16px;border-radius:0 8px 8px 0;
+  font-size:13px;color:#7b5800;margin:10px 0;line-height:1.6}
+.warn{background:#fce4d6;border-left:3px solid #c0392b;padding:12px 16px;border-radius:0 8px 8px 0;
+  font-size:13px;color:#7b0000;margin:10px 0;line-height:1.6}
+.success-box{background:#e8f5e9;border:1.5px solid #a9dfbf;border-radius:10px;
+  padding:16px 20px;margin:20px 0;font-size:14px;color:#1a6b3c}
+.success-box h3{margin-bottom:8px;font-size:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+.info-card{background:#f0f7ff;border:1px solid #b8d4ef;border-radius:10px;padding:16px}
+.info-card h4{font-size:14px;color:#1e6fa8;margin-bottom:8px;font-weight:600}
+.info-card p{font-size:13px;color:#5d6d7e;line-height:1.6}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:600}
+.b-free{background:#e8f5e9;color:#1a6b3c}
+.b-cost{background:#fce4d6;color:#7b0000}
+.role-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+.role-table th{background:#0f1f3d;color:white;padding:8px 12px;text-align:left;font-size:12px}
+.role-table td{padding:8px 12px;border-bottom:1px solid #eef0f4}
+.role-table tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>🚀 Competitor Intel Portal — Deployment Guide</h1>
+<p class="subtitle">Complete step-by-step guide to go from files to a live online portal in ~30 minutes</p>
+
+<!-- ═════ PHASE 1: SUPABASE ═════ -->
+<div class="phase ph-blue">
+  <div class="phase-header">
+    <div class="phase-num">1</div>
+    <div><div class="phase-title">Set Up Supabase (Free Database + Auth)</div>
+    <div class="phase-sub">~10 minutes · Free forever · No credit card needed</div></div>
+    <span class="badge b-free" style="margin-left:auto">FREE</span>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">🌐</div>
+      <div class="step-body">
+        <div class="step-label">Create your free Supabase account</div>
+        <div class="step-desc">Go to <strong>supabase.com</strong> → Click "Start your project" → Sign up with GitHub or email → It's completely free (500MB database, 50,000 monthly active users on free plan)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🏗</div>
+      <div class="step-body">
+        <div class="step-label">Create a new project</div>
+        <div class="step-desc">Click "New Project" → Enter name: <code>competitor-intel</code> → Choose region: <strong>Southeast Asia (Singapore)</strong> for best Pakistan latency → Set a strong database password → Click "Create new project" → Wait ~2 minutes for it to spin up</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🔑</div>
+      <div class="step-body">
+        <div class="step-label">Copy your API credentials</div>
+        <div class="step-desc">In your project dashboard → Click ⚙️ <strong>Settings</strong> (left sidebar) → Click <strong>API</strong> → Copy two things:
+          <br><br>
+          📋 <strong>Project URL</strong>: looks like <code>https://abcdefgh.supabase.co</code><br>
+          📋 <strong>anon public key</strong>: a long JWT token starting with <code>eyJhbGci...</code>
+          <br><br>Keep these — you'll paste them in the portal config screen.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🗄</div>
+      <div class="step-body">
+        <div class="step-label">Run the database setup script</div>
+        <div class="step-desc">In Supabase → Click <strong>SQL Editor</strong> (left sidebar, looks like &lt;/&gt;) → Click "New query" → Open the file <code>supabase_setup.sql</code> provided → Copy the entire contents → Paste into the editor → Click <strong>Run</strong> (or press Ctrl+Enter)
+        <br><br>You should see "Success. No rows returned" — this created all your tables, security rules, and database policies.</div>
+        <div class="tip">💡 The SQL script creates: user profiles table, submissions table, product entries table, and Row Level Security so field staff can ONLY see their own data</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">📧</div>
+      <div class="step-body">
+        <div class="step-label">Configure email settings (optional but recommended)</div>
+        <div class="step-desc">In Supabase → Authentication → Providers → Email → You can turn off "Confirm email" for easier testing (users don't need to verify email). For production, keep it ON for security.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ PHASE 2: GITHUB ═════ -->
+<div class="phase ph-green">
+  <div class="phase-header">
+    <div class="phase-num">2</div>
+    <div><div class="phase-title">Host on GitHub Pages (Free Web Hosting)</div>
+    <div class="phase-sub">~10 minutes · Free forever · Gets you a public URL</div></div>
+    <span class="badge b-free" style="margin-left:auto">FREE</span>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">👤</div>
+      <div class="step-body">
+        <div class="step-label">Create a GitHub account (if you don't have one)</div>
+        <div class="step-desc">Go to <strong>github.com</strong> → Sign Up → Free account is all you need. GitHub is where your portal files will live.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">📁</div>
+      <div class="step-body">
+        <div class="step-label">Create a new repository</div>
+        <div class="step-desc">After logging in → Click the <strong>+</strong> icon (top right) → "New repository" → Repository name: <code>competitor-portal</code> → Set to <strong>Public</strong> (required for free GitHub Pages) → Click "Create repository"</div>
+        <div class="warn">⚠ The repository must be Public for free GitHub Pages hosting. Your Supabase credentials are NOT in the HTML (users enter them on first use), so this is safe.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">⬆</div>
+      <div class="step-body">
+        <div class="step-label">Upload your files</div>
+        <div class="step-desc">In your new repository → Click "uploading an existing file" link → Drag and drop these files from your computer:
+          <br><br>
+          📄 <code>index.html</code> (the portal)<br>
+          📄 <code>supabase_setup.sql</code> (for reference)<br>
+          📄 <code>DEPLOYMENT_GUIDE.html</code> (this file)
+          <br><br>
+          → Scroll down → Click <strong>"Commit changes"</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🌍</div>
+      <div class="step-body">
+        <div class="step-label">Enable GitHub Pages</div>
+        <div class="step-desc">In your repository → Click ⚙️ <strong>Settings</strong> tab → Scroll down to <strong>Pages</strong> section (left sidebar) → Under "Source" → Select <strong>Deploy from a branch</strong> → Branch: <strong>main</strong> → Folder: <strong>/ (root)</strong> → Click <strong>Save</strong>
+        <br><br>Wait 2-3 minutes → Your portal is now live at:
+        <div class="code-block"><span class="highlight">https://YOUR-GITHUB-USERNAME.github.io/competitor-portal/</span></div>
+        Share this URL with your entire team. It works on mobile and desktop.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🔗</div>
+      <div class="step-body">
+        <div class="step-label">Update your files later</div>
+        <div class="step-desc">If you need to update the portal → Go to your GitHub repository → Click on <code>index.html</code> → Click the ✏️ pencil icon → Edit → Commit changes. GitHub Pages automatically redeploys within 2 minutes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ PHASE 3: FIRST LOGIN ═════ -->
+<div class="phase ph-gold">
+  <div class="phase-header">
+    <div class="phase-num">3</div>
+    <div><div class="phase-title">First-Time Portal Configuration</div>
+    <div class="phase-sub">~5 minutes · One-time setup per browser</div></div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">⚙️</div>
+      <div class="step-body">
+        <div class="step-label">Connect the portal to Supabase</div>
+        <div class="step-desc">Open your GitHub Pages URL → You'll see a "First-Time Setup" screen → Paste your <strong>Supabase Project URL</strong> and <strong>anon public key</strong> → Click "Save & Connect"
+        <br><br>This only happens once per device/browser. The credentials are saved locally.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">👑</div>
+      <div class="step-body">
+        <div class="step-label">Create your admin (Head Office) account</div>
+        <div class="step-desc">On the login screen → Click "Create Account" tab → Fill in your details → Role: <strong>Head Office / Admin</strong> → Submit
+        <br><br>Then go to Supabase → SQL Editor → Run this command to make yourself admin:
+        <div class="code-block"><span class="comment">-- Replace with your actual email:</span>
+UPDATE public.profiles 
+SET role = 'ho' 
+WHERE email = '<span class="highlight">your@email.com</span>';</div>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">👥</div>
+      <div class="step-body">
+        <div class="step-label">Share with field team</div>
+        <div class="step-desc">Send the portal URL to your field team. Each person:
+          <br>① Opens the URL on their phone/laptop
+          <br>② Pastes Supabase credentials (you share these once via WhatsApp)
+          <br>③ Creates their own account (name, role=Field, town, email, password)
+          <br>④ Done — they can immediately start entering data
+        </div>
+        <div class="tip">💡 Alternatively, you can create accounts for all field staff yourself in Supabase → Authentication → Users → "Invite user"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ PHASE 4: ROLES ═════ -->
+<div class="phase ph-navy">
+  <div class="phase-header">
+    <div class="phase-num">4</div>
+    <div><div class="phase-title">Understanding Roles & Privacy</div>
+    <div class="phase-sub">Who sees what</div></div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">🔐</div>
+      <div class="step-body">
+        <div class="step-label">Role-based access control</div>
+        <div class="step-desc">
+          <table class="role-table">
+            <thead><tr><th>Role</th><th>Can See</th><th>Views Available</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Field TSS/TSM</strong></td><td>Only their OWN submissions</td><td>Enter Data, My Reports</td></tr>
+              <tr><td><strong>Supervisor</strong></td><td>All submissions + dashboard</td><td>Dashboard, All Submissions, New Intel, My Reports</td></tr>
+              <tr><td><strong>RSM / Manager</strong></td><td>All submissions + dashboard</td><td>Dashboard, All Submissions, New Intel</td></tr>
+              <tr><td><strong>Head Office</strong></td><td>Everything</td><td>All views + User Management</td></tr>
+            </tbody>
+          </table>
+          <br>Privacy is enforced at the <strong>database level</strong> (Supabase Row Level Security) — not just the UI. Even if someone tries to access data directly, the database will block them.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🔒</div>
+      <div class="step-body">
+        <div class="step-label">Change a user's role in Supabase</div>
+        <div class="step-desc">
+          Go to Supabase → SQL Editor → Run:
+          <div class="code-block"><span class="comment">-- Options: 'field', 'supervisor', 'rsm', 'ho'</span>
+UPDATE public.profiles 
+SET role = '<span class="highlight">rsm</span>' 
+WHERE email = '<span class="highlight">arif.saeed@dollarpk.com</span>';</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ PHASE 5: CUSTOM DOMAIN ═════ -->
+<div class="phase ph-purple">
+  <div class="phase-header">
+    <div class="phase-num">5</div>
+    <div><div class="phase-title">Optional: Custom Domain (e.g. intel.dollarpk.com)</div>
+    <div class="phase-sub">~15 minutes · Costs ~$10–15/year for domain</div></div>
+    <span class="badge b-cost" style="margin-left:auto">Optional</span>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">🌐</div>
+      <div class="step-body">
+        <div class="step-label">Buy a domain (if you don't have one)</div>
+        <div class="step-desc">Buy from <strong>namecheap.com</strong> or <strong>godaddy.com</strong> — about $10–15/year. Example: <code>dollarpk.com</code> or <code>dollar-intel.com</code></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-icon">⚙️</div>
+      <div class="step-body">
+        <div class="step-label">Connect domain to GitHub Pages</div>
+        <div class="step-desc">In your domain registrar → Add a CNAME record: <code>intel</code> → <code>YOUR-USERNAME.github.io</code>
+        <br><br>In GitHub → Repository Settings → Pages → Custom domain → Enter <code>intel.dollarpk.com</code> → Save → Enable "Enforce HTTPS"
+        <br><br>Wait 10–30 minutes for DNS propagation. Your portal will then be available at <code>https://intel.dollarpk.com</code></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ SUMMARY ═════ -->
+<div class="success-box">
+  <h3>✅ Final Result</h3>
+  <p>Your portal will be live at a URL like <strong>https://yourusername.github.io/competitor-portal/</strong><br>
+  ✓ Accessible from any phone, laptop, or tablet — no app install needed<br>
+  ✓ Each field person has their own login and can only see their own data<br>
+  ✓ Head Office sees everything in real-time as field team submits<br>
+  ✓ Completely free to run (Supabase free tier + GitHub Pages free tier)</p>
+</div>
+
+<div class="grid2">
+  <div class="info-card">
+    <h4>📞 WhatsApp Message to Send Field Team</h4>
+    <p>
+      "Asslam o Alaikum Team,<br><br>
+      Our new Competitor Price Portal is live. Please use this link: <strong>[YOUR URL]</strong><br><br>
+      First time setup:<br>
+      1. Open the link<br>
+      2. Paste these credentials: [share Supabase URL + key]<br>
+      3. Create your account with your name, town and role=Field<br>
+      4. Start entering data for the current fortnight<br><br>
+      Contact your supervisor if you face any issues."
+    </p>
+  </div>
+  <div class="info-card">
+    <h4>🆘 Troubleshooting Common Issues</h4>
+    <p>
+      <strong>Page shows blank:</strong> Wait 5 min after enabling GitHub Pages<br><br>
+      <strong>"Connection failed":</strong> Check your Supabase URL and key are correct<br><br>
+      <strong>"Invalid login":</strong> Check email/password. Reset via Supabase Auth panel<br><br>
+      <strong>Can't see other submissions (HO):</strong> Make sure your role is set to 'ho' in profiles table<br><br>
+      <strong>SQL errors:</strong> Make sure you ran the full supabase_setup.sql script
+    </p>
+  </div>
+</div>
+
+<div style="text-align:center;padding:30px;color:#8891a4;font-size:13px;border-top:1px solid #eef0f4;margin-top:30px">
+  Dollar Stationery Pvt. Ltd. · Competitor Intelligence Portal · Built with Supabase + GitHub Pages
+</div>
+</div>
+</body>
+</html>

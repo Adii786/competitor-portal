@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dollar Stationery — Competitor Intel Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── CSS Variables ── */
+:root {
+  --navy:#0f1f3d; --navy2:#162a52; --gold:#c8922a; --gold-lt:#f0b84a;
+  --cream:#f5f0e8; --slate:#2c3e5e; --red:#c0392b; --green:#1a6b3c;
+  --green-lt:#27ae60; --amber:#d97706; --sky:#1e6fa8; --white:#ffffff;
+  --grey1:#f8f9fb; --grey2:#eef0f4; --grey3:#d1d5de; --grey4:#8891a4;
+  --text:#1a1f2e; --radius:12px;
+  --shadow:0 4px 24px rgba(15,31,61,0.10);
+  --shadow-lg:0 12px 48px rgba(15,31,61,0.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);min-height:100vh}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ── LOGIN ── */
+#screen-login{align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,#1a3a6b 100%)}
+.login-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
+.login-logo-area{text-align:center;margin-bottom:32px}
+.login-logo{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;
+  color:var(--gold-lt);letter-spacing:-0.5px}
+.login-tagline{color:rgba(255,255,255,0.45);font-size:13px;margin-top:4px;font-weight:300}
+.login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);
+  border:1px solid rgba(200,146,42,0.25);border-radius:20px;padding:40px 36px;width:420px}
+.login-tab-row{display:flex;gap:6px;margin-bottom:28px;background:rgba(0,0,0,0.2);
+  border-radius:10px;padding:4px}
+.login-tab{flex:1;padding:10px;border:none;background:transparent;color:rgba(255,255,255,0.5);
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;
+  border-radius:7px;transition:all .2s}
+.login-tab.active{background:rgba(200,146,42,0.25);color:var(--gold-lt);font-weight:600}
+.field-label{color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px;display:block}
+.field-wrap{margin-bottom:16px}
+.login-input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.09);
+  border:1.5px solid rgba(255,255,255,0.12);border-radius:9px;color:white;
+  font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.login-input:focus{border-color:var(--gold);background:rgba(255,255,255,0.12)}
+.login-input option{background:#162a52}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  border:none;border-radius:10px;color:var(--navy);font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;
+  letter-spacing:0.2px}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(200,146,42,0.4)}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.login-error{background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);
+  color:#ff8a80;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;
+  display:none}
+.login-error.show{display:block}
+.login-info{background:rgba(30,111,168,0.15);border:1px solid rgba(30,111,168,0.3);
+  color:#90caf9;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;
+  line-height:1.6}
+
+/* ── CONFIG SCREEN ── */
+#screen-config{flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--navy),var(--navy2))}
+.config-card{background:white;border-radius:20px;padding:40px;width:520px;box-shadow:var(--shadow-lg)}
+.config-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  color:var(--navy);margin-bottom:6px}
+.config-sub{color:var(--grey4);font-size:13px;margin-bottom:28px;line-height:1.6}
+.config-step{display:flex;gap:14px;margin-bottom:18px;padding:16px;
+  background:var(--grey1);border-radius:10px;border-left:3px solid var(--gold)}
+.config-step-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
+  color:var(--gold);flex-shrink:0;line-height:1}
+.config-step-text{font-size:13px;color:var(--text);line-height:1.6}
+.config-step-text code{background:var(--grey2);padding:2px 6px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:12px;color:var(--navy)}
+.config-input-wrap{margin:20px 0}
+.config-input-label{font-size:12px;font-weight:600;color:var(--grey4);
+  text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
+.config-input{width:100%;padding:11px 14px;border:1.5px solid var(--grey3);
+  border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);
+  background:var(--grey1);outline:none;margin-bottom:10px}
+.config-input:focus{border-color:var(--navy)}
+.config-save-btn{width:100%;padding:13px;background:var(--navy);border:none;
+  border-radius:10px;color:white;font-family:'Syne',sans-serif;font-size:15px;
+  font-weight:700;cursor:pointer}
+.config-save-btn:hover{background:var(--navy2)}
+
+/* ── APP SHELL ── */
+#screen-app{flex-direction:column}
+.topbar{background:var(--navy);height:58px;display:flex;align-items:center;
+  padding:0 24px;justify-content:space-between;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 16px rgba(0,0,0,0.25)}
+.tb-brand{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;
+  color:var(--gold-lt);display:flex;align-items:center;gap:8px}
+.tb-right{display:flex;align-items:center;gap:16px}
+.period-badge{background:rgba(200,146,42,0.15);border:1px solid rgba(200,146,42,0.3);
+  padding:5px 13px;border-radius:20px;color:var(--gold-lt);font-size:12px;
+  font-weight:500;cursor:pointer;white-space:nowrap}
+.period-badge:hover{background:rgba(200,146,42,0.25)}
+.user-chip{display:flex;align-items:center;gap:9px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;
+  font-size:12px;font-weight:700;color:var(--navy);flex-shrink:0}
+.user-info{display:flex;flex-direction:column}
+.user-name-tb{color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;line-height:1.2}
+.user-role-tb{color:rgba(255,255,255,0.4);font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
+.logout-btn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  padding:6px 13px;border-radius:8px;color:rgba(255,255,255,0.5);font-size:12px;
+  cursor:pointer;transition:all .2s}
+.logout-btn:hover{background:rgba(192,57,43,0.25);border-color:var(--red);color:#ff7675}
+
+.app-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:var(--navy2);flex-shrink:0;padding:16px 10px;
+  display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;
+  border:none;background:transparent;color:rgba(255,255,255,0.55);font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:500;cursor:pointer;width:100%;text-align:left;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
+.nav-item.active{background:rgba(200,146,42,0.2);color:var(--gold-lt);font-weight:600}
+.nav-item .nav-icon{font-size:15px;flex-shrink:0}
+.nav-section{font-size:10px;font-weight:700;color:rgba(255,255,255,0.2);
+  text-transform:uppercase;letter-spacing:1px;padding:12px 14px 4px;margin-top:4px}
+.main-area{flex:1;overflow-y:auto;padding:24px}
+.view{display:none}
+.view.active{display:block}
+
+/* ── COMPONENTS ── */
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  color:var(--navy);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--grey4);margin-bottom:22px}
+.card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.card-header{padding:18px 22px;border-bottom:1px solid var(--grey2);
+  display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--navy)}
+.card-body{padding:22px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:white;border-radius:12px;padding:18px;box-shadow:var(--shadow);
+  border-left:3px solid var(--grey3);position:relative}
+.kpi.kpi-navy{border-left-color:var(--navy)} .kpi.kpi-gold{border-left-color:var(--gold)}
+.kpi.kpi-green{border-left-color:var(--green-lt)} .kpi.kpi-red{border-left-color:var(--red)}
+.kpi.kpi-sky{border-left-color:var(--sky)}
+.kpi-label{font-size:10px;font-weight:700;color:var(--grey4);text-transform:uppercase;
+  letter-spacing:0.7px;margin-bottom:8px}
+.kpi-val{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--navy);line-height:1}
+.kpi-hint{font-size:11px;color:var(--grey4);margin-top:5px}
+.kpi-ico{position:absolute;right:14px;top:14px;font-size:22px;opacity:0.12}
+
+/* Form */
+.fg-row{display:grid;gap:14px;margin-bottom:14px}
+.fg-4{grid-template-columns:repeat(4,1fr)} .fg-3{grid-template-columns:repeat(3,1fr)}
+.fg-2{grid-template-columns:repeat(2,1fr)} .fg-1{grid-template-columns:1fr}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:11px;font-weight:600;color:var(--grey4);text-transform:uppercase;letter-spacing:0.6px}
+.fc{padding:10px 13px;border:1.5px solid var(--grey3);border-radius:8px;font-family:'Inter',sans-serif;
+  font-size:13px;color:var(--text);background:var(--grey1);outline:none;transition:border-color .2s}
+.fc:focus{border-color:var(--navy);background:white}
+.fc.inp{border-color:var(--gold-lt);background:#fffdf5}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--grey2);border-radius:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{background:var(--navy);color:white;padding:9px 11px;text-align:left;
+  font-family:'Syne',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:0.4px;
+  white-space:nowrap;position:sticky;top:0;z-index:5}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--grey2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafbfc}
+.tbl tr.cat-row td{background:var(--navy2);color:white;font-family:'Syne',sans-serif;
+  font-weight:700;font-size:10px;letter-spacing:1px;padding:6px 11px}
+.tbl tr.new-row td{background:#f0fdf4}
+.ti{width:100%;padding:5px 8px;border:1.5px solid var(--grey3);border-radius:6px;
+  font-family:'Inter',sans-serif;font-size:12px;background:white;outline:none}
+.ti:focus{border-color:var(--navy)}
+.ti.net-price{background:#eff7ff;border-color:#b8d4ef;font-weight:700;
+  color:var(--sky);text-align:right;cursor:default}
+
+/* Buttons */
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:7px}
+.btn-navy{background:var(--navy);color:white} .btn-navy:hover{background:var(--navy2)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:var(--navy)}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(200,146,42,0.3)}
+.btn-green{background:var(--green);color:white}
+.btn-outline{background:transparent;border:1.5px solid var(--grey3);color:var(--grey4)}
+.btn-outline:hover{border-color:var(--navy);color:var(--navy)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-red{background:var(--red);color:white}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:600}
+.b-green{background:#e8f5e9;color:var(--green)} .b-amber{background:#fff8e1;color:var(--amber)}
+.b-red{background:#fce4d6;color:var(--red)} .b-sky{background:#e3f2fd;color:var(--sky)}
+.b-navy{background:#e8edf5;color:var(--navy)} .b-new{background:#e8f5e9;color:var(--green)}
+
+/* Cards for submissions */
+.sub-item{border:1.5px solid var(--grey2);border-radius:10px;padding:14px 18px;
+  margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;transition:all .2s;background:white}
+.sub-item:hover{border-color:var(--navy);background:var(--grey1)}
+.sub-title{font-weight:600;font-size:14px;color:var(--navy)}
+.sub-meta{font-size:12px;color:var(--grey4);margin-top:2px}
+.sub-right{display:flex;align-items:center;gap:10px}
+
+/* Filter bar */
+.fbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;
+  background:var(--grey2);border-radius:10px;margin-bottom:18px;font-size:12px}
+.fbar label{font-weight:600;color:var(--grey4);text-transform:uppercase;
+  letter-spacing:0.5px;font-size:10px}
+.fbar select,.fbar input{padding:6px 11px;border:1.5px solid var(--grey3);border-radius:7px;
+  font-size:12px;background:white;color:var(--text);outline:none}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,15,30,0.65);
+  backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:white;border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow-lg);max-width:650px;width:92%}
+.modal-head{padding:18px 24px;background:var(--navy);color:white;
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  display:flex;align-items:center;justify-content:space-between}
+.modal-body{padding:22px;max-height:65vh;overflow-y:auto}
+.modal-foot{padding:14px 22px;background:var(--grey1);border-top:1px solid var(--grey2);
+  display:flex;justify-content:flex-end;gap:10px}
+.mc-btn{background:rgba(255,255,255,0.15);border:none;color:white;width:26px;
+  height:26px;border-radius:6px;cursor:pointer;font-size:15px;display:flex;
+  align-items:center;justify-content:center}
+
+/* New intel */
+.intel-item{background:#f0fdf4;border:1.5px solid #a9dfbf;border-radius:9px;
+  padding:12px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px}
+.intel-badge{background:var(--green);color:white;padding:2px 10px;border-radius:12px;
+  font-size:10px;font-weight:700;text-transform:uppercase;flex-shrink:0;margin-top:2px}
+.intel-text{flex:1;font-size:13px;line-height:1.6}
+.intel-by{font-size:11px;color:var(--grey4);white-space:nowrap;text-align:right;flex-shrink:0}
+
+/* Submission tracker table */
+.tracker-pending{color:var(--amber)}
+.tracker-done{color:var(--green-lt)}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(10,15,30,0.7);z-index:900;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.spinner{width:40px;height:40px;border:3px solid rgba(200,146,42,0.3);
+  border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+.loading-text{color:rgba(255,255,255,0.7);font-size:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast-box{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;
+  box-shadow:var(--shadow-lg);animation:slideIn .3s;display:flex;align-items:center;gap:9px}
+.t-success{background:var(--green);color:white} .t-error{background:var(--red);color:white}
+.t-info{background:var(--navy);color:white}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+
+/* Bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:130px;padding-bottom:4px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;background:var(--navy);transition:height .5s}
+.bar-lbl{font-size:8.5px;color:var(--grey4);text-align:center;word-break:break-word;line-height:1.3}
+.bar-num{font-size:9px;font-weight:700;color:var(--navy);font-family:'DM Mono',monospace}
+
+/* Section divider */
+.sdiv{display:flex;align-items:center;gap:10px;margin:20px 0 14px}
+.sdiv-line{flex:1;height:1px;background:var(--grey2)}
+.sdiv-lbl{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  background:var(--navy);color:white;padding:3px 14px;border-radius:20px;white-space:nowrap}
+
+/* Setup notice */
+.setup-notice{background:linear-gradient(135deg,#1a3a6b,var(--navy2));
+  border:1px solid rgba(200,146,42,0.3);border-radius:12px;padding:20px 24px;
+  color:white;margin-bottom:20px}
+.setup-notice h3{font-family:'Syne',sans-serif;font-size:16px;margin-bottom:8px;color:var(--gold-lt)}
+.setup-notice p{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6}
+.setup-notice code{background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:12px;color:var(--gold-lt)}
+</style>
+</head>
+<body>
+
+<!-- ══ LOADING ══ -->
+<div class="loading-overlay" id="loading" style="display:none">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Loading...</div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast-box" id="toasts"></div>
+
+<!-- ══ SCREEN: CONFIG (first-run setup) ══ -->
+<div class="screen" id="screen-config">
+  <div class="config-card">
+    <div class="config-title">⚙️ First-Time Setup</div>
+    <div class="config-sub">Connect this portal to your Supabase database. You only do this once — settings are saved in your browser.</div>
+    <div class="config-step">
+      <div class="config-step-num">1</div>
+      <div class="config-step-text">Go to <strong>supabase.com</strong> → Create a free project → Copy your <code>Project URL</code> and <code>anon public key</code> from Settings → API</div>
+    </div>
+    <div class="config-step">
+      <div class="config-step-num">2</div>
+      <div class="config-step-text">Run the SQL setup script from <code>supabase_setup.sql</code> in your Supabase SQL Editor to create all tables, roles, and policies</div>
+    </div>
+    <div class="config-step">
+      <div class="config-step-num">3</div>
+      <div class="config-step-text">Paste your credentials below and click Save. The portal will connect and be ready to use.</div>
+    </div>
+    <div class="config-input-wrap">
+      <div class="config-input-label">Supabase Project URL</div>
+      <input class="config-input" id="cfg-url" placeholder="https://xxxxxxxxxxxx.supabase.co">
+      <div class="config-input-label">Supabase Anon Public Key</div>
+      <input class="config-input" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+    </div>
+    <button class="config-save-btn" onclick="saveConfig()">Save & Connect →</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: LOGIN ══ -->
+<div class="screen" id="screen-login">
+  <div class="login-wrap">
+    <div class="login-logo-area">
+      <div class="login-logo">◆ Dollar Stationery</div>
+      <div class="login-tagline">Competitor Intelligence Portal · Pakistan Operations</div>
+    </div>
+    <div class="login-card">
+      <div class="login-tab-row">
+        <button class="login-tab active" onclick="setLoginMode('login')" id="lt-login">Sign In</button>
+        <button class="login-tab" onclick="setLoginMode('signup')" id="lt-signup">Create Account</button>
+      </div>
+      <div class="login-error" id="login-error"></div>
+      <div id="login-info-box" class="login-info" style="display:none"></div>
+
+      <!-- Sign In -->
+      <div id="form-login">
+        <div class="field-wrap">
+          <label class="field-label">Email Address</label>
+          <input class="login-input" type="email" id="l-email" placeholder="you@dollarpk.com" autocomplete="email">
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Password</label>
+          <input class="login-input" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="login-btn" onclick="doLogin()" id="btn-login">Sign In →</button>
+      </div>
+
+      <!-- Sign Up -->
+      <div id="form-signup" style="display:none">
+        <div class="fg-row fg-2">
+          <div class="field-wrap">
+            <label class="field-label">Full Name</label>
+            <input class="login-input" type="text" id="s-name" placeholder="Muhammad Ahmed">
+          </div>
+          <div class="field-wrap">
+            <label class="field-label">Role</label>
+            <select class="login-input" id="s-role">
+              <option value="field">Field TSS / TSM</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="rsm">RSM / Manager</option>
+              <option value="ho">Head Office / Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Town / Territory</label>
+          <select class="login-input" id="s-town">
+            <option value="">— Select Town —</option>
+          </select>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Email Address</label>
+          <input class="login-input" type="email" id="s-email" placeholder="you@dollarpk.com">
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Password (min 8 chars)</label>
+          <input class="login-input" type="password" id="s-pass" placeholder="••••••••">
+        </div>
+        <button class="login-btn" onclick="doSignup()" id="btn-signup">Create Account →</button>
+      </div>
+
+      <div style="text-align:center;margin-top:16px">
+        <span style="color:rgba(255,255,255,0.3);font-size:12px">
+          Field team: contact your RSM for account creation
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: APP ══ -->
+<div class="screen" id="screen-app">
+  <div class="topbar">
+    <div class="tb-brand">◆ Competitor Intel</div>
+    <div class="tb-right">
+      <div class="period-badge" id="tb-period" onclick="openPeriodModal()">📅 —</div>
+      <div class="user-chip">
+        <div class="avatar" id="tb-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name-tb" id="tb-name">—</div>
+          <div class="user-role-tb" id="tb-role">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="app-body">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main-area" id="main-area">
+      <!-- Views injected here -->
+      <div class="view active" id="view-entry"></div>
+      <div class="view" id="view-myreports"></div>
+      <div class="view" id="view-dashboard"></div>
+      <div class="view" id="view-allsubs"></div>
+      <div class="view" id="view-intel"></div>
+      <div class="view" id="view-users"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Period Modal -->
+<div class="modal-bg" id="period-modal">
+  <div class="modal">
+    <div class="modal-head">📅 Set Reporting Period
+      <button class="mc-btn" onclick="closePeriodModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg-row fg-3">
+        <div class="fg"><span class="fl">Month</span>
+          <select class="fc" id="pm-month">
+            <option>January</option><option>February</option><option>March</option>
+            <option>April</option><option>May</option><option>June</option>
+            <option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select></div>
+        <div class="fg"><span class="fl">Year</span>
+          <select class="fc" id="pm-year">
+            <option>2025</option><option>2026</option><option>2027</option>
+          </select></div>
+        <div class="fg"><span class="fl">Fortnight</span>
+          <select class="fc" id="pm-fn">
+            <option>1st (1–14)</option><option>2nd (15–31)</option>
+          </select></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-navy" onclick="savePeriod()">Save Period</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submission Detail Modal -->
+<div class="modal-bg" id="detail-modal">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-head" id="detail-head">Submission Detail
+      <button class="mc-btn" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="exportCurrentCSV()">⬇ Export CSV</button>
+      <button class="btn btn-navy btn-sm" onclick="closeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// CONFIG & SUPABASE INIT
+// ══════════════════════════════════════════════════════════════════════
+let supabase = null;
+let currentUser = null;
+let currentProfile = null;
+let currentPeriod = {month:'February',year:'2025',fortnight:'1st (1–14)'};
+let currentView = 'entry';
+let detailSubData = null;
+
+const TOWNS = [
+  "Hyderabad","Karachi","Lahore","Rawalpindi","Multan","Faisalabad",
+  "Gujranwala","Peshawar","Quetta","Sukkur","Larkana","Nawabshah",
+  "Mirpurkhas","Okara","Sahiwal","Burewala","Sargodha","Mianwali",
+  "Abbottabad","Muzaffarabad","Gilgit","Skardu","Dir","Mingora",
+  "Mardan","Kohat","Attock","DI Khan","Bannu","Chakwal","Gujrat",
+  "Narowal","Sialkot","Wazirabad","Hafizabad","Jhang","Bahawalpur",
+  "Rahimyar Khan","DGK","Vehari","Mian Channu"
+];
+
+const CATEGORIES = [
+  "Fine Liner","Fountain Pen","Permanent Marker","Ink Permanent Marker",
+  "White Board Marker","Ink White Board Marker","Highlighter",
+  "Ball Pen Cap Type","Ball Pen Button Type","Gel Pen","Fiber Tip Marker",
+  "Staples #24/6","Staples #10","Ink Fountain Pens","Colour Pencil",
+  "Pencil Synthetic","Wooden Pencil With Eraser"
+];
+
+const PRODUCTS = {
+  "Fine Liner":[{co:"Dollar",brand:"Pointer +"},{co:"Aftab Sons",brand:"Signature Hi-Tec"},{co:"Aftab Sons",brand:"Signature FLINER (Basic)"},{co:"Sayyed",brand:"Piano Fine Liner"},{co:"Sayyed",brand:"Piano Grip Liner"},{co:"Indus",brand:"Deer Point Liner"},{co:"Mark",brand:"Micro Fine Liner"},{co:"Master",brand:"Liner"}],
+  "Fountain Pen":[{co:"Dollar",brand:"SP-10"},{co:"Dollar",brand:"FP-100 Display Pack"},{co:"Sayyed",brand:"Piano F Pen"},{co:"Sayyed",brand:"Piano Scool"},{co:"Indus",brand:"Deer Glider"},{co:"Indus",brand:"Deer Techno"},{co:"Dux",brand:"Mr. Pen"},{co:"Bahadur",brand:"B-10"}],
+  "Permanent Marker":[{co:"Dollar",brand:"Permanent Marker"},{co:"Mark",brand:"Mercury Permanent Marker"},{co:"Sayyed",brand:"Piano Plus 70/90"},{co:"Sayyed",brand:"Piano Plus XL 70/90"},{co:"Aftab Sons",brand:"Signature Markpro 70/90"},{co:"Snowman",brand:"Permanent Marker"},{co:"Master",brand:"Snora"},{co:"Indus",brand:"Deer Permanent Marker"}],
+  "Ink Permanent Marker":[{co:"Dollar",brand:"Ink Permanent Marker"},{co:"Mark",brand:"Mercury P.M Ink"},{co:"Sayyed",brand:"Piano Permanent Ink"},{co:"Aftab Sons",brand:"Signature Markpro Ink"},{co:"Indus",brand:"Deer P.Marker Ink"},{co:"Deen Sons",brand:"Crystal / Diamond"}],
+  "White Board Marker":[{co:"Dollar",brand:"Dry Erase Marker"},{co:"Sayyed",brand:"Piano Wipe Easy"},{co:"Sayyed",brand:"Piano Wipe Easy XL"},{co:"Aftab Sons",brand:"Signature Doctor Board"},{co:"Mark",brand:"Mercury W.B"},{co:"Snowman",brand:"Board Marker"},{co:"Leader",brand:"Leader Whiteboard"},{co:"Master",brand:"Snora"}],
+  "Ink White Board Marker":[{co:"Dollar",brand:"W.Board Marker Ink 15ml"},{co:"Sayyed",brand:"Piano Whiteboard Ink"},{co:"Aftab Sons",brand:"Dr. Board Erasable Ink"},{co:"Snowman",brand:"Board Marker Ink"},{co:"Mark",brand:"Mercury W.B.Ink"}],
+  "Highlighter":[{co:"Dollar",brand:"Highlighter"},{co:"Sayyed",brand:"Piano Hilite"},{co:"Sayyed",brand:"Piano Hilite XL"},{co:"Mark",brand:"Highlighter Flat"},{co:"Mark",brand:"Highlighter Round"},{co:"Aftab Sons",brand:"Signature Spot Liter"},{co:"Indus",brand:"Deer Highlighter"},{co:"ORO",brand:"Hi-Glow"}],
+  "Ball Pen Cap Type":[{co:"Dollar",brand:"Budget"},{co:"Sayyed",brand:"Coro"},{co:"Sayyed",brand:"Piano Econo"},{co:"Master",brand:"Felo"},{co:"Aftab Sons",brand:"Signature Economy"},{co:"Indus",brand:"Jubilee"}],
+  "Ball Pen Button Type":[{co:"Dollar",brand:"Clipper"},{co:"Sayyed",brand:"Piano Click"},{co:"Sayyed",brand:"Piano Click Sky"},{co:"Sayyed",brand:"Piano Point"},{co:"Aftab Sons",brand:"Signature Matte Blue"},{co:"Aftab Sons",brand:"Signature Orenj"},{co:"Mark",brand:"Mercury Power"},{co:"Indus",brand:"Deer Winner"},{co:"Indus",brand:"Deer Racer"},{co:"Master",brand:"Clix"}],
+  "Gel Pen":[{co:"Dollar",brand:"Gel-1 Regular"},{co:"Dux",brand:"Dux Gel Pen DX-1000"},{co:"Dux",brand:"Dux Office Gel Pen"},{co:"Sayyed",brand:"Piano Classic Gel"},{co:"M & G",brand:"Crystal"},{co:"Indus",brand:"Deer Gel"}],
+  "Fiber Tip Marker":[{co:"Dollar",brand:"Colour Marker Regular"},{co:"Dollar",brand:"Colour Marker Deluxe"},{co:"Sayyed",brand:"Tempo II"},{co:"Mark",brand:"Mercury Fiber Regular"},{co:"Aftab Sons",brand:"Signature Artist"},{co:"Master",brand:"Mate Fiber Tip"}],
+  "Staples #24/6":[{co:"Dollar",brand:"Staples #24/6"},{co:"Dux",brand:"Staple Pin 24/6"},{co:"ORO",brand:"Stapler Pin #24/6"},{co:"Sayyed",brand:"Piano Staples 24/6"},{co:"Bahadur",brand:"Scope Pin #24/6"}],
+  "Staples #10":[{co:"Dollar",brand:"Staples #10"},{co:"Dux",brand:"Staple Pin #10"},{co:"Sayyed",brand:"Piano Staples #10"},{co:"ORO",brand:"Stapler Pin #10"}],
+  "Ink Fountain Pens":[{co:"Dollar",brand:"Ink 15ml"},{co:"Dollar",brand:"Ink 30ml"},{co:"Dollar",brand:"Ink 60ml"},{co:"Sayyed",brand:"Piano Ink 30ml"},{co:"Sayyed",brand:"Piano Ink 60ml"},{co:"Nafees",brand:"Regular 20ml"}],
+  "Colour Pencil":[{co:"Dollar",brand:"Colour Pencil Full Size"},{co:"Dollar",brand:"Colour Pencil Half Size"},{co:"Sayyed",brand:"Tempo 12 Colour Full"},{co:"Dux",brand:"Color Oni #4000"},{co:"Bahadur",brand:"Trica 12 Colour Full"},{co:"ORO",brand:"Pencil Colour #101"}],
+  "Pencil Synthetic":[{co:"General",brand:"Pencil General 20"},{co:"Indus",brand:"Speedo With Eraser"},{co:"Indus",brand:"Super Excel"}],
+  "Wooden Pencil With Eraser":[{co:"Dollar",brand:"My Pencil 456/222"},{co:"Sayyed",brand:"Chilly Pop Metalic"},{co:"Dux",brand:"Graphite 888"},{co:"ORO",brand:"Splash 512"}]
+};
+
+function initSupabase() {
+  const url = localStorage.getItem('sb_url');
+  const key = localStorage.getItem('sb_key');
+  if (url && key) {
+    supabase = window.supabase.createClient(url, key);
+    return true;
+  }
+  return false;
+}
+
+function saveConfig() {
+  const url = document.getElementById('cfg-url').value.trim();
+  const key = document.getElementById('cfg-key').value.trim();
+  if (!url || !key) { alert('Please enter both URL and Key'); return; }
+  if (!url.includes('supabase.co')) { alert('URL should be a Supabase project URL'); return; }
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  supabase = window.supabase.createClient(url, key);
+  showScreen('screen-login');
+  toast('Connected to Supabase! You can now sign in.','success');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// STARTUP
+// ══════════════════════════════════════════════════════════════════════
+async function startup() {
+  // Populate town dropdowns
+  const td = document.getElementById('s-town');
+  TOWNS.forEach(t => td.innerHTML += `<option>${t}</option>`);
+
+  if (!initSupabase()) {
+    showScreen('screen-config'); return;
+  }
+
+  // Check existing session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    await loadProfile(session.user);
+  } else {
+    showScreen('screen-login');
+  }
+
+  // Auth state listener
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) await loadProfile(session.user);
+    else if (event === 'SIGNED_OUT') showScreen('screen-login');
+  });
+}
+
+async function loadProfile(user) {
+  showLoading('Loading your profile...');
+  const { data, error } = await supabase
+    .from('profiles').select('*').eq('id', user.id).single();
+  if (error || !data) {
+    hideLoading();
+    showScreen('screen-login');
+    showError('Profile not found. Contact your administrator.');
+    return;
+  }
+  currentUser = user;
+  currentProfile = data;
+
+  // Load saved period
+  const sp = localStorage.getItem('period');
+  if (sp) currentPeriod = JSON.parse(sp);
+
+  // Update topbar
+  document.getElementById('tb-avatar').textContent = data.full_name.charAt(0).toUpperCase();
+  document.getElementById('tb-name').textContent = data.full_name;
+  document.getElementById('tb-role').textContent = roleLabel(data.role);
+  updatePeriodBadge();
+
+  // Build nav
+  buildNav();
+  hideLoading();
+  showScreen('screen-app');
+  navigateTo('entry');
+}
+
+function roleLabel(r) {
+  return {field:'Field TSS/TSM',supervisor:'Supervisor',rsm:'RSM / Manager',ho:'Head Office'}[r]||r;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════════════
+function setLoginMode(mode) {
+  document.getElementById('form-login').style.display = mode==='login'?'':'none';
+  document.getElementById('form-signup').style.display = mode==='signup'?'':'none';
+  document.getElementById('lt-login').classList.toggle('active', mode==='login');
+  document.getElementById('lt-signup').classList.toggle('active', mode==='signup');
+  clearLoginError();
+}
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  if (!email || !pass) { showError('Please enter email and password'); return; }
+  setBtn('btn-login', true, 'Signing in...');
+  const { error } = await supabase.auth.signInWithPassword({email, password: pass});
+  setBtn('btn-login', false, 'Sign In →');
+  if (error) showError(error.message);
+}
+
+async function doSignup() {
+  const name = document.getElementById('s-name').value.trim();
+  const role = document.getElementById('s-role').value;
+  const town = document.getElementById('s-town').value;
+  const email = document.getElementById('s-email').value.trim();
+  const pass = document.getElementById('s-pass').value;
+  if (!name||!email||!pass||!town) { showError('Please fill all fields'); return; }
+  if (pass.length < 8) { showError('Password must be at least 8 characters'); return; }
+  setBtn('btn-signup', true, 'Creating...');
+  const { data, error } = await supabase.auth.signUp({email, password: pass,
+    options: { data: { full_name: name, role, town }}});
+  setBtn('btn-signup', false, 'Create Account →');
+  if (error) { showError(error.message); return; }
+  // Insert profile
+  if (data.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id, full_name: name, role, town, email
+    });
+  }
+  clearLoginError();
+  document.getElementById('login-info-box').style.display = '';
+  document.getElementById('login-info-box').textContent =
+    '✅ Account created! Check your email to verify, then sign in.';
+  setLoginMode('login');
+}
+
+async function doLogout() {
+  await supabase.auth.signOut();
+  currentUser = null; currentProfile = null;
+  showScreen('screen-login');
+}
+
+function setBtn(id, disabled, text) {
+  const b = document.getElementById(id);
+  if (b) { b.disabled = disabled; b.textContent = text; }
+}
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = '⚠ ' + msg; el.classList.add('show');
+}
+function clearLoginError() {
+  document.getElementById('login-error').classList.remove('show');
+  document.getElementById('login-info-box').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════════
+function buildNav() {
+  const role = currentProfile.role;
+  const isHO = ['ho','rsm','supervisor'].includes(role);
+  const navItems = [
+    ...(role==='field'||role==='supervisor'?[{id:'entry',icon:'📝',label:'Enter Data'},{id:'myreports',icon:'📋',label:'My Reports'}]:[]),
+    ...(isHO ? [
+      {section:'Head Office'},
+      {id:'dashboard',icon:'📊',label:'Dashboard'},
+      {id:'allsubs',icon:'📂',label:'All Submissions'},
+      {id:'intel',icon:'🆕',label:'New Intel'},
+      ...(role==='ho'?[{id:'users',icon:'👥',label:'User Management'}]:[]),
+    ] : []),
+  ];
+
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = navItems.map(item => item.section
+    ? `<div class="nav-section">${item.section}</div>`
+    : `<button class="nav-item" id="nav-${item.id}" onclick="navigateTo('${item.id}')">
+        <span class="nav-icon">${item.icon}</span>${item.label}
+       </button>`
+  ).join('');
+}
+
+function navigateTo(view) {
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const viewEl = document.getElementById('view-'+view);
+  const navEl = document.getElementById('nav-'+view);
+  if (viewEl) viewEl.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  renderView(view);
+}
+
+async function renderView(view) {
+  if (view==='entry') await renderEntry();
+  else if (view==='myreports') await renderMyReports();
+  else if (view==='dashboard') await renderDashboard();
+  else if (view==='allsubs') await renderAllSubs();
+  else if (view==='intel') await renderIntel();
+  else if (view==='users') await renderUsers();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PERIOD
+// ══════════════════════════════════════════════════════════════════════
+function updatePeriodBadge() {
+  document.getElementById('tb-period').textContent =
+    `📅 ${currentPeriod.month} ${currentPeriod.year} · ${currentPeriod.fortnight}`;
+}
+function openPeriodModal() {
+  document.getElementById('pm-month').value = currentPeriod.month;
+  document.getElementById('pm-year').value = currentPeriod.year;
+  document.getElementById('pm-fn').value = currentPeriod.fortnight;
+  document.getElementById('period-modal').classList.add('open');
+}
+function closePeriodModal() { document.getElementById('period-modal').classList.remove('open'); }
+function savePeriod() {
+  currentPeriod = {
+    month: document.getElementById('pm-month').value,
+    year: document.getElementById('pm-year').value,
+    fortnight: document.getElementById('pm-fn').value
+  };
+  localStorage.setItem('period', JSON.stringify(currentPeriod));
+  updatePeriodBadge();
+  closePeriodModal();
+  toast('Period updated','info');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ENTRY FORM VIEW
+// ══════════════════════════════════════════════════════════════════════
+async function renderEntry() {
+  const el = document.getElementById('view-entry');
+  const periodKey = `${currentPeriod.month}_${currentPeriod.year}_${currentPeriod.fortnight}`;
+
+  // Check if already submitted
+  const { data: existing } = await supabase.from('submissions')
+    .select('id, total_products, new_product_count, submitted_at')
+    .eq('user_id', currentUser.id).eq('period_key', periodKey).maybeSingle();
+
+  // Build product table rows
+  let tableRows = '';
+  CATEGORIES.forEach(cat => {
+    tableRows += `<tr class="cat-row"><td colspan="9">◆ ${cat.toUpperCase()}</td></tr>`;
+    PRODUCTS[cat].forEach(p => {
+      const rid = `${cat}__${p.co}__${p.brand}`.replace(/[\s+/()#.]/g,'_');
+      tableRows += `<tr>
+        <td><strong>${p.co}</strong></td>
+        <td style="min-width:140px">${p.brand}</td>
+        <td><select class="ti" id="${rid}_rk" style="width:72px">
+          <option value="">—</option><option>1st</option><option>2nd</option>
+          <option>3rd</option><option>4th</option><option>5th</option>
+        </select></td>
+        <td><input class="ti" type="number" id="${rid}_pc" min="1" style="width:55px" placeholder="10"></td>
+        <td><input class="ti" type="number" id="${rid}_tp" oninput="calcNet('${rid}')" style="width:85px" placeholder="0.00"></td>
+        <td><input class="ti" type="number" id="${rid}_dc" oninput="calcNet('${rid}')" style="width:55px" placeholder="%" max="100"></td>
+        <td><input class="ti net-price" type="number" id="${rid}_np" readonly style="width:85px"></td>
+        <td><input class="ti" type="text" id="${rid}_sc" placeholder="e.g. 10+1" style="width:85px"></td>
+        <td><input class="ti" type="text" id="${rid}_nt" placeholder="Remarks" style="width:110px"></td>
+      </tr>`;
+    });
+  });
+
+  // New entry rows
+  let newRows = '';
+  for (let i=1;i<=6;i++) {
+    newRows += `<tr class="new-row">
+      <td><input class="ti" id="nw${i}_co" placeholder="Company" style="width:115px"></td>
+      <td><input class="ti" id="nw${i}_br" placeholder="Brand Name" style="width:130px"></td>
+      <td><select class="ti" id="nw${i}_ca" style="width:140px">
+        <option value="">— Category —</option>
+        ${CATEGORIES.map(c=>`<option>${c}</option>`).join('')}
+      </select></td>
+      <td><select class="ti" id="nw${i}_rk" style="width:70px">
+        <option>—</option><option>1st</option><option>2nd</option><option>3rd</option>
+      </select></td>
+      <td><input class="ti" type="number" id="nw${i}_tp" oninput="calcNewNet(${i})" placeholder="TP" style="width:75px"></td>
+      <td><input class="ti" type="number" id="nw${i}_dc" oninput="calcNewNet(${i})" placeholder="%" style="width:52px"></td>
+      <td><input class="ti net-price" type="number" id="nw${i}_np" readonly style="width:75px"></td>
+      <td><input class="ti" type="text" id="nw${i}_sc" placeholder="Scheme" style="width:80px"></td>
+      <td><input class="ti" type="text" id="nw${i}_nt" placeholder="Remarks" style="width:105px"></td>
+    </tr>`;
+  }
+
+  el.innerHTML = `
+    <div class="page-title">Competitor Price Entry</div>
+    <div class="page-sub">${currentProfile.full_name} · ${currentProfile.town} · ${currentPeriod.month} ${currentPeriod.year} · ${currentPeriod.fortnight}</div>
+
+    ${existing ? `<div style="background:#e8f5e9;border:1.5px solid #a9dfbf;border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">
+      <div><strong style="color:var(--green)">✓ Report already submitted</strong>
+      <span style="color:var(--grey4);font-size:13px;margin-left:10px">${existing.total_products} products · ${existing.submitted_at?.split('T')[0]}</span></div>
+      <span style="font-size:12px;color:var(--grey4)">Re-submitting will overwrite</span>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Product Price Entry — All Categories</div>
+        <div style="font-size:12px;color:var(--grey4)">Leave blank if not available in your market</div>
+      </div>
+      <div class="card-body">
+        <div style="background:#eff7ff;border:1.5px solid #b8d4ef;border-radius:8px;padding:11px 15px;margin-bottom:18px;font-size:13px;color:var(--sky)">
+          💡 Enter <strong>Trade Price (TP)</strong> and <strong>Discount %</strong> → Net Price calculates automatically.
+          Skip any row where the product is not observed in your market.
+        </div>
+        <div class="tbl-wrap" style="max-height:520px;overflow-y:auto">
+          <table class="tbl">
+            <thead><tr>
+              <th>Company</th><th>Brand / Product</th><th>Ranking</th>
+              <th>Pcs/Unit</th><th>Trade Price (Rs.)</th><th>Disc %</th>
+              <th>Net Price (Rs.)</th><th>Scheme / TO</th><th>Notes</th>
+            </tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>
+
+        <div class="sdiv"><div class="sdiv-line"></div>
+          <div class="sdiv-lbl">🆕 NEW BRANDS / COMPANIES IN MARKET</div>
+          <div class="sdiv-line"></div>
+        </div>
+        <div style="font-size:12px;color:var(--grey4);margin-bottom:10px">
+          Spotted any new competitor not listed above? Report here:
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Company</th><th>Brand</th><th>Category</th><th>Ranking</th>
+              <th>Trade Price</th><th>Disc%</th><th>Net Price</th><th>Scheme</th><th>Notes</th>
+            </tr></thead>
+            <tbody>${newRows}</tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="submitForm()">✓ Submit Report</button>
+          <button class="btn btn-outline" onclick="if(confirm('Clear all entries?'))renderEntry()">Clear</button>
+          <div style="margin-left:auto;font-size:11px;color:var(--grey4)">
+            Only rows with a Trade Price entered will be saved
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function calcNet(rid) {
+  const tp = parseFloat(document.getElementById(rid+'_tp')?.value)||0;
+  const dc = parseFloat(document.getElementById(rid+'_dc')?.value)||0;
+  const el = document.getElementById(rid+'_np');
+  if (el) el.value = tp > 0 ? (tp*(1-dc/100)).toFixed(2) : '';
+}
+function calcNewNet(i) {
+  const tp = parseFloat(document.getElementById('nw'+i+'_tp')?.value)||0;
+  const dc = parseFloat(document.getElementById('nw'+i+'_dc')?.value)||0;
+  const el = document.getElementById('nw'+i+'_np');
+  if (el) el.value = tp > 0 ? (tp*(1-dc/100)).toFixed(2) : '';
+}
+
+async function submitForm() {
+  const periodKey = `${currentPeriod.month}_${currentPeriod.year}_${currentPeriod.fortnight}`;
+  const entries = [];
+  const newEntries = [];
+
+  CATEGORIES.forEach(cat => {
+    PRODUCTS[cat].forEach(p => {
+      const rid = `${cat}__${p.co}__${p.brand}`.replace(/[\s+/()#.]/g,'_');
+      const tp = parseFloat(document.getElementById(rid+'_tp')?.value);
+      if (!tp || isNaN(tp)) return;
+      entries.push({
+        category:cat, company:p.co, brand:p.brand,
+        ranking:document.getElementById(rid+'_rk')?.value||'',
+        pcs:document.getElementById(rid+'_pc')?.value||'',
+        trade_price:tp,
+        discount_pct:parseFloat(document.getElementById(rid+'_dc')?.value)||0,
+        net_price:parseFloat(document.getElementById(rid+'_np')?.value)||0,
+        scheme:document.getElementById(rid+'_sc')?.value||'',
+        notes:document.getElementById(rid+'_nt')?.value||'',
+        is_new_product:false
+      });
+    });
+  });
+
+  for (let i=1;i<=6;i++) {
+    const co = document.getElementById('nw'+i+'_co')?.value.trim();
+    const br = document.getElementById('nw'+i+'_br')?.value.trim();
+    if (!co && !br) continue;
+    newEntries.push({
+      category:document.getElementById('nw'+i+'_ca')?.value||'',
+      company:co, brand:br,
+      ranking:document.getElementById('nw'+i+'_rk')?.value||'',
+      pcs:'',
+      trade_price:parseFloat(document.getElementById('nw'+i+'_tp')?.value)||0,
+      discount_pct:parseFloat(document.getElementById('nw'+i+'_dc')?.value)||0,
+      net_price:parseFloat(document.getElementById('nw'+i+'_np')?.value)||0,
+      scheme:document.getElementById('nw'+i+'_sc')?.value||'',
+      notes:document.getElementById('nw'+i+'_nt')?.value||'',
+      is_new_product:true
+    });
+  }
+
+  if (!entries.length && !newEntries.length) {
+    toast('Please enter at least one Trade Price','error'); return;
+  }
+
+  showLoading('Submitting your report...');
+
+  // Upsert submission
+  const subData = {
+    user_id: currentUser.id,
+    period_key: periodKey,
+    period_month: currentPeriod.month,
+    period_year: currentPeriod.year,
+    period_fortnight: currentPeriod.fortnight,
+    town: currentProfile.town,
+    full_name: currentProfile.full_name,
+    total_products: entries.length + newEntries.length,
+    new_product_count: newEntries.length,
+    submitted_at: new Date().toISOString()
+  };
+
+  // Check existing submission for this user+period
+  const { data: existing } = await supabase.from('submissions')
+    .select('id').eq('user_id', currentUser.id).eq('period_key', periodKey).maybeSingle();
+
+  let subId;
+  if (existing) {
+    await supabase.from('submissions').update(subData).eq('id', existing.id);
+    await supabase.from('submission_entries').delete().eq('submission_id', existing.id);
+    subId = existing.id;
+  } else {
+    const { data: ins } = await supabase.from('submissions').insert(subData).select('id').single();
+    subId = ins?.id;
+  }
+
+  if (!subId) { hideLoading(); toast('Error saving submission','error'); return; }
+
+  // Insert entries
+  const allEntries = [...entries,...newEntries].map(e=>({...e, submission_id:subId, user_id:currentUser.id}));
+  await supabase.from('submission_entries').insert(allEntries);
+
+  hideLoading();
+  toast(`Report submitted! ${entries.length} products + ${newEntries.length} new entries.`,'success');
+  setTimeout(()=>renderEntry(),600);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MY REPORTS VIEW
+// ══════════════════════════════════════════════════════════════════════
+async function renderMyReports() {
+  const el = document.getElementById('view-myreports');
+  el.innerHTML = `<div class="page-title">My Reports</div><div class="page-sub">Your submitted competition reports</div><div id="mr-list"><div style="text-align:center;padding:40px;color:var(--grey4)">Loading...</div></div>`;
+
+  const { data } = await supabase.from('submissions')
+    .select('*').eq('user_id', currentUser.id).order('submitted_at',{ascending:false});
+
+  const list = document.getElementById('mr-list');
+  if (!data?.length) {
+    list.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;color:var(--grey4);padding:40px">No reports submitted yet</div></div>`;
+    return;
+  }
+  list.innerHTML = data.map(s=>`
+    <div class="sub-item" onclick="openDetail(${s.id})">
+      <div>
+        <div class="sub-title">${s.period_month} ${s.period_year} · ${s.period_fortnight}</div>
+        <div class="sub-meta">${s.town} · Submitted: ${new Date(s.submitted_at).toLocaleString('en-PK')}</div>
+      </div>
+      <div class="sub-right">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--sky)">${s.total_products} products</span>
+        ${s.new_product_count>0?`<span class="badge b-green">+${s.new_product_count} new</span>`:''}
+        <span class="badge b-green">✓ Submitted</span>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DASHBOARD VIEW (HO)
+// ══════════════════════════════════════════════════════════════════════
+async function renderDashboard() {
+  const el = document.getElementById('view-dashboard');
+  el.innerHTML = `<div class="page-title">Dashboard</div><div class="page-sub">${currentPeriod.month} ${currentPeriod.year} · ${currentPeriod.fortnight}</div><div style="text-align:center;padding:40px;color:var(--grey4)">Loading data...</div>`;
+
+  const periodKey = `${currentPeriod.month}_${currentPeriod.year}_${currentPeriod.fortnight}`;
+
+  const [{ data: subs }, { data: profiles }, { data: entries }] = await Promise.all([
+    supabase.from('submissions').select('*').eq('period_key', periodKey),
+    supabase.from('profiles').select('*').eq('role','field'),
+    supabase.from('submission_entries').select('*').eq('period_key', periodKey)
+  ]);
+
+  const submitted = subs?.length||0;
+  const total = profiles?.length||0;
+  const pending = total - submitted;
+  const priceEntries = (entries||[]).filter(e=>e.trade_price>0);
+  const newEntries = (entries||[]).filter(e=>e.is_new_product);
+
+  // Category price summary
+  const catPrices = {};
+  CATEGORIES.forEach(cat => {
+    const ces = priceEntries.filter(e=>e.category===cat&&e.net_price>0);
+    if (ces.length) catPrices[cat] = {
+      avg: ces.reduce((s,e)=>s+e.net_price,0)/ces.length,
+      min: Math.min(...ces.map(e=>e.net_price)),
+      max: Math.max(...ces.map(e=>e.net_price)),
+      count: ces.length
+    };
+  });
+
+  const catKeys = Object.keys(catPrices);
+  const maxAvg = Math.max(...catKeys.map(k=>catPrices[k].avg),1);
+  const bars = catKeys.slice(0,10).map(cat => {
+    const pct = Math.max(Math.round((catPrices[cat].avg/maxAvg)*100),3);
+    const short = cat.replace('White Board','WB').replace('Permanent','PM')
+      .replace('Fountain','FP').replace('Ball Pen ','BP ');
+    return `<div class="bar-col">
+      <div class="bar-num">Rs.${Math.round(catPrices[cat].avg)}</div>
+      <div class="bar-fill" style="height:${pct}%"></div>
+      <div class="bar-lbl">${short}</div>
+    </div>`;
+  }).join('');
+
+  // Tracker rows
+  const subMap = {};
+  (subs||[]).forEach(s => subMap[s.full_name] = s);
+  const trackerRows = (profiles||[]).slice(0,25).map(p=>{
+    const sub = subMap[p.full_name];
+    return `<tr>
+      <td><strong>${p.full_name}</strong></td>
+      <td>${p.town||'—'}</td>
+      <td>${sub
+        ? `<span class="badge b-green">✓ ${sub.total_products} products</span>`
+        : `<span class="badge b-amber">⏳ Pending</span>`}</td>
+      <td style="font-size:11px">${sub ? new Date(sub.submitted_at).toLocaleString('en-PK') : '—'}</td>
+      <td>${sub?.new_product_count>0?`<span class="badge b-green">+${sub.new_product_count}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">${currentPeriod.month} ${currentPeriod.year} · ${currentPeriod.fortnight} · Click 📅 in topbar to change period</div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-navy"><div class="kpi-label">Field Team</div><div class="kpi-val">${total}</div><div class="kpi-hint">Registered field persons</div><div class="kpi-ico">👥</div></div>
+      <div class="kpi kpi-green"><div class="kpi-label">Submitted</div><div class="kpi-val">${submitted}</div><div class="kpi-hint">This period</div><div class="kpi-ico">✅</div></div>
+      <div class="kpi kpi-red"><div class="kpi-label">Pending</div><div class="kpi-val">${pending}</div><div class="kpi-hint">Yet to submit</div><div class="kpi-ico">⏳</div></div>
+      <div class="kpi kpi-gold"><div class="kpi-label">Price Records</div><div class="kpi-val">${priceEntries.length}</div><div class="kpi-hint">Data points collected</div><div class="kpi-ico">📊</div></div>
+      <div class="kpi kpi-sky"><div class="kpi-label">New Intel</div><div class="kpi-val">${newEntries.length}</div><div class="kpi-hint">New brands reported</div><div class="kpi-ico">🆕</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-bottom:18px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Average Net Price by Category</div></div>
+        <div class="card-body">
+          ${catKeys.length
+            ? `<div class="bar-chart">${bars}</div>`
+            : `<div style="text-align:center;color:var(--grey4);padding:30px;font-size:13px">No data for this period yet</div>`}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Category Price Summary</div></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>Category</th><th>N</th><th>Min</th><th>Avg</th><th>Max</th></tr></thead>
+            <tbody>${catKeys.length
+              ? catKeys.map(c=>`<tr>
+                  <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${c}</td>
+                  <td style="text-align:center">${catPrices[c].count}</td>
+                  <td><span class="badge b-navy" style="font-size:10px">Rs.${catPrices[c].min.toFixed(0)}</span></td>
+                  <td><span class="badge b-sky" style="font-size:10px">Rs.${catPrices[c].avg.toFixed(0)}</span></td>
+                  <td><span class="badge b-navy" style="font-size:10px">Rs.${catPrices[c].max.toFixed(0)}</span></td>
+                </tr>`).join('')
+              : '<tr><td colspan="5" style="text-align:center;color:var(--grey4);padding:20px">Awaiting submissions</td></tr>'
+            }</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Submission Tracker</div>
+        <div style="font-size:12px;color:var(--grey4)">${submitted}/${total} submitted · ${Math.round(submitted/Math.max(total,1)*100)}% completion</div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>Salesperson</th><th>Town</th><th>Status</th><th>Submitted At</th><th>New Intel</th></tr></thead>
+          <tbody>${trackerRows||'<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--grey4)">No field profiles found</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ALL SUBMISSIONS (HO)
+// ══════════════════════════════════════════════════════════════════════
+async function renderAllSubs() {
+  const el = document.getElementById('view-allsubs');
+  el.innerHTML = `
+    <div class="page-title">All Submissions</div>
+    <div class="page-sub">Browse and review all field team reports</div>
+    <div class="fbar">
+      <label>Period</label>
+      <select id="f-period" onchange="filterSubs()">
+        <option value="">All Periods</option>
+      </select>
+      <label>Person</label>
+      <select id="f-person" onchange="filterSubs()">
+        <option value="">All</option>
+      </select>
+      <label>Town</label>
+      <select id="f-town" onchange="filterSubs()">
+        <option value="">All</option>
+        ${TOWNS.map(t=>`<option>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div id="subs-list"><div style="text-align:center;padding:40px;color:var(--grey4)">Loading...</div></div>`;
+
+  const { data: subs } = await supabase.from('submissions')
+    .select('*').order('submitted_at',{ascending:false});
+
+  const periods = [...new Set((subs||[]).map(s=>s.period_key))];
+  const persons = [...new Set((subs||[]).map(s=>s.full_name))].sort();
+  const fp = document.getElementById('f-period');
+  const fpers = document.getElementById('f-person');
+  periods.forEach(p => fp.innerHTML += `<option>${p}</option>`);
+  persons.forEach(p => fpers.innerHTML += `<option>${p}</option>`);
+
+  window._allSubs = subs||[];
+  filterSubs();
+}
+
+function filterSubs() {
+  const fp = document.getElementById('f-period')?.value||'';
+  const fpers = document.getElementById('f-person')?.value||'';
+  const ft = document.getElementById('f-town')?.value||'';
+  let data = window._allSubs||[];
+  if (fp) data = data.filter(s=>s.period_key===fp);
+  if (fpers) data = data.filter(s=>s.full_name===fpers);
+  if (ft) data = data.filter(s=>s.town===ft);
+  const el = document.getElementById('subs-list');
+  if (!el) return;
+  el.innerHTML = data.length
+    ? data.map(s=>`
+      <div class="sub-item" onclick="openDetail(${s.id})">
+        <div>
+          <div class="sub-title">${s.full_name} — ${s.town}</div>
+          <div class="sub-meta">${s.period_month} ${s.period_year} · ${s.period_fortnight} · ${new Date(s.submitted_at).toLocaleString('en-PK')}</div>
+        </div>
+        <div class="sub-right">
+          <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--sky)">${s.total_products} products</span>
+          ${s.new_product_count>0?`<span class="badge b-green">+${s.new_product_count} new</span>`:''}
+          <span class="badge b-green">✓</span>
+        </div>
+      </div>`).join('')
+    : `<div class="card"><div class="card-body" style="text-align:center;color:var(--grey4);padding:40px">No submissions match the filter</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DETAIL MODAL
+// ══════════════════════════════════════════════════════════════════════
+async function openDetail(subId) {
+  const { data: sub } = await supabase.from('submissions').select('*').eq('id',subId).single();
+  const { data: entries } = await supabase.from('submission_entries').select('*').eq('submission_id',subId).order('category');
+  if (!sub||!entries) return;
+  detailSubData = {sub,entries};
+
+  // Group by category
+  const byCat = {};
+  entries.forEach(e=>{
+    if(!byCat[e.category]) byCat[e.category]=[];
+    byCat[e.category].push(e);
+  });
+
+  const rows = Object.entries(byCat).map(([cat,ces])=>`
+    <tr style="background:var(--navy2)"><td colspan="8" style="color:white;font-weight:700;font-size:10px;padding:7px 11px;letter-spacing:0.8px">
+      ${cat.toUpperCase()} ${ces.some(e=>e.is_new_product)?'<span style="background:var(--green);color:white;padding:1px 8px;border-radius:10px;font-size:9px;margin-left:6px">HAS NEW</span>':''}
+    </td></tr>
+    ${ces.map(e=>`<tr style="${e.is_new_product?'background:#f0fdf4':''}">
+      <td>${e.is_new_product?'<span class="badge b-new" style="font-size:9px">NEW</span> ':''}<strong>${e.company}</strong></td>
+      <td>${e.brand}</td>
+      <td>${e.ranking||'—'}</td>
+      <td style="text-align:center">${e.pcs||'—'}</td>
+      <td style="text-align:right">${e.trade_price?'Rs.'+e.trade_price.toFixed(2):'—'}</td>
+      <td style="text-align:center">${e.discount_pct?e.discount_pct+'%':'—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--sky)">${e.net_price?'Rs.'+e.net_price.toFixed(2):'—'}</td>
+      <td style="font-size:11px">${e.scheme||'—'}</td>
+    </tr>`).join('')}`).join('');
+
+  document.getElementById('detail-head').textContent =
+    `${sub.full_name} · ${sub.town} · ${sub.period_month} ${sub.period_year} · ${sub.period_fortnight}`;
+  document.getElementById('detail-body').innerHTML = `
+    <div style="font-size:12px;color:var(--grey4);margin-bottom:14px">
+      Submitted: ${new Date(sub.submitted_at).toLocaleString('en-PK')} &nbsp;·&nbsp;
+      ${sub.total_products} products &nbsp;·&nbsp; ${sub.new_product_count} new entries
+    </div>
+    <div class="tbl-wrap" style="max-height:55vh">
+      <table class="tbl">
+        <thead><tr><th>Company</th><th>Brand</th><th>Rank</th><th>Pcs</th><th>Trade Price</th><th>Disc%</th><th>Net Price</th><th>Scheme</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+function closeDetailModal() { document.getElementById('detail-modal').classList.remove('open'); }
+
+function exportCurrentCSV() {
+  if (!detailSubData) return;
+  const {sub, entries} = detailSubData;
+  const hdrs = ['Person','Town','Period','Category','Company','Brand','Ranking','Pcs','Trade Price','Disc%','Net Price','Scheme','Notes','Is New'];
+  const rows = entries.map(e=>[
+    sub.full_name, sub.town, `${sub.period_month} ${sub.period_year} ${sub.period_fortnight}`,
+    e.category, e.company, e.brand, e.ranking, e.pcs,
+    e.trade_price, e.discount_pct, e.net_price, e.scheme, e.notes, e.is_new_product?'Yes':'No'
+  ].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [hdrs.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `competitor_${sub.full_name}_${sub.period_month}${sub.period_year}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// NEW INTEL VIEW
+// ══════════════════════════════════════════════════════════════════════
+async function renderIntel() {
+  const el = document.getElementById('view-intel');
+  el.innerHTML = `<div class="page-title">🆕 New Market Intelligence</div><div class="page-sub">New brands and companies reported by field team</div><div style="text-align:center;padding:40px;color:var(--grey4)">Loading...</div>`;
+
+  const { data } = await supabase.from('submission_entries').select(`
+    *, submissions(full_name, town, period_month, period_year, submitted_at)
+  `).eq('is_new_product', true).order('created_at',{ascending:false});
+
+  if (!data?.length) {
+    el.querySelector('div:last-child').innerHTML = `<div class="card"><div class="card-body" style="text-align:center;color:var(--grey4);padding:40px">No new products reported yet</div></div>`;
+    return;
+  }
+
+  // Group by company
+  const byCo = {};
+  data.forEach(e => {
+    const co = e.company||'Unknown';
+    if (!byCo[co]) byCo[co] = [];
+    byCo[co].push(e);
+  });
+
+  el.innerHTML = `
+    <div class="page-title">🆕 New Market Intelligence</div>
+    <div class="page-sub">${data.length} new entries from ${Object.keys(byCo).length} companies — across all periods</div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">New Competitors Observed in Market</div>
+        <span class="badge b-green">${data.length} Total New Entries</span>
+      </div>
+      <div class="card-body">
+        ${Object.entries(byCo).map(([co,items])=>`
+          <div style="margin-bottom:24px">
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--navy);
+              padding:10px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:10px;
+              display:flex;align-items:center;gap:10px">
+              ${co}
+              <span style="font-size:11px;background:var(--grey2);padding:3px 10px;
+                border-radius:12px;color:var(--grey4);font-weight:400">${items.length} brand(s)</span>
+            </div>
+            ${items.map(e=>`
+              <div class="intel-item">
+                <span class="intel-badge">NEW</span>
+                <div class="intel-text">
+                  <strong>${e.brand||'—'}</strong>
+                  <span style="color:var(--grey4);font-size:12px;margin-left:6px">[${e.category||'—'}]</span>
+                  ${e.trade_price?`&nbsp;·&nbsp; TP: <strong>Rs.${e.trade_price}</strong>`:''} 
+                  ${e.net_price?`&nbsp;·&nbsp; NP: <strong style="color:var(--sky)">Rs.${e.net_price.toFixed(2)}</strong>`:''}
+                  ${e.scheme?`&nbsp;·&nbsp; Scheme: ${e.scheme}`:''}
+                  ${e.notes?`<br><span style="font-size:12px;color:var(--grey4)">${e.notes}</span>`:''}
+                </div>
+                <div class="intel-by">
+                  <strong>${e.submissions?.full_name||'—'}</strong><br>
+                  <span>${e.submissions?.town||'—'}</span><br>
+                  <span style="font-size:10px">${e.submissions?.period_month||''} ${e.submissions?.period_year||''}</span>
+                </div>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// USER MANAGEMENT (HO Admin only)
+// ══════════════════════════════════════════════════════════════════════
+async function renderUsers() {
+  const el = document.getElementById('view-users');
+  const { data } = await supabase.from('profiles').select('*').order('full_name');
+  el.innerHTML = `
+    <div class="page-title">👥 User Management</div>
+    <div class="page-sub">All registered portal users</div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Registered Users (${data?.length||0})</div></div>
+      <div class="card-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Town</th><th>Created</th></tr></thead>
+          <tbody>${(data||[]).map(u=>`<tr>
+            <td><strong>${u.full_name}</strong></td>
+            <td style="font-size:12px">${u.email||'—'}</td>
+            <td><span class="badge ${u.role==='ho'?'b-navy':u.role==='rsm'?'b-sky':u.role==='supervisor'?'b-amber':'b-green'}">${roleLabel(u.role)}</span></td>
+            <td>${u.town||'—'}</td>
+            <td style="font-size:11px">${u.created_at?new Date(u.created_at).toLocaleDateString('en-PK'):'—'}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg;
+  document.getElementById('loading').style.display = 'flex';
+}
+function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+function toast(msg, type='info') {
+  const box = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast t-${type}`;
+  t.innerHTML = `${type==='success'?'✅':type==='error'?'⚠️':'ℹ️'} ${msg}`;
+  box.appendChild(t);
+  setTimeout(()=>t.remove(), 3800);
+}
+
+// Startup
+startup();
+</script>
+</body>
+</html>
