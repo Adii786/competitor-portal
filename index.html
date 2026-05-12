@@ -487,7 +487,7 @@ body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);mi
 // ══════════════════════════════════════════════════════════════════════
 // CONFIG & SUPABASE INIT
 // ══════════════════════════════════════════════════════════════════════
-let supabase = null;
+let db = null;
 let currentUser = null;
 let currentProfile = null;
 let currentPeriod = {month:'February',year:'2025',fortnight:'1st (1–14)'};
@@ -536,7 +536,7 @@ function initSupabase() {
   const url = localStorage.getItem('sb_url');
   const key = localStorage.getItem('sb_key');
   if (url && key) {
-    supabase = window.supabase.createClient(url, key);
+    db = window.supabase.createClient(url, key);
     return true;
   }
   return false;
@@ -549,7 +549,7 @@ function saveConfig() {
   if (!url.includes('supabase.co')) { alert('URL should be a Supabase project URL'); return; }
   localStorage.setItem('sb_url', url);
   localStorage.setItem('sb_key', key);
-  supabase = window.supabase.createClient(url, key);
+  db = window.supabase.createClient(url, key);
   showScreen('screen-login');
   toast('Connected to Supabase! You can now sign in.','success');
 }
@@ -567,7 +567,7 @@ async function startup() {
   }
 
   // Check existing session
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await db.auth.getSession();
   if (session) {
     await loadProfile(session.user);
   } else {
@@ -575,7 +575,7 @@ async function startup() {
   }
 
   // Auth state listener
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  db.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) await loadProfile(session.user);
     else if (event === 'SIGNED_OUT') showScreen('screen-login');
   });
@@ -631,7 +631,7 @@ async function doLogin() {
   const pass = document.getElementById('l-pass').value;
   if (!email || !pass) { showError('Please enter email and password'); return; }
   setBtn('btn-login', true, 'Signing in...');
-  const { error } = await supabase.auth.signInWithPassword({email, password: pass});
+  const { error } = await db.auth.signInWithPassword({email, password: pass});
   setBtn('btn-login', false, 'Sign In →');
   if (error) showError(error.message);
 }
@@ -645,13 +645,13 @@ async function doSignup() {
   if (!name||!email||!pass||!town) { showError('Please fill all fields'); return; }
   if (pass.length < 8) { showError('Password must be at least 8 characters'); return; }
   setBtn('btn-signup', true, 'Creating...');
-  const { data, error } = await supabase.auth.signUp({email, password: pass,
+  const { data, error } = await db.auth.signUp({email, password: pass,
     options: { data: { full_name: name, role, town }}});
   setBtn('btn-signup', false, 'Create Account →');
   if (error) { showError(error.message); return; }
   // Insert profile
   if (data.user) {
-    await supabase.from('profiles').upsert({
+    await db.from('profiles').upsert({
       id: data.user.id, full_name: name, role, town, email
     });
   }
@@ -663,7 +663,7 @@ async function doSignup() {
 }
 
 async function doLogout() {
-  await supabase.auth.signOut();
+  await db.auth.signOut();
   currentUser = null; currentProfile = null;
   showScreen('screen-login');
 }
@@ -761,7 +761,7 @@ async function renderEntry() {
   const periodKey = `${currentPeriod.month}_${currentPeriod.year}_${currentPeriod.fortnight}`;
 
   // Check if already submitted
-  const { data: existing } = await supabase.from('submissions')
+  const { data: existing } = await db.from('submissions')
     .select('id, total_products, new_product_count, submitted_at')
     .eq('user_id', currentUser.id).eq('period_key', periodKey).maybeSingle();
 
@@ -944,16 +944,16 @@ async function submitForm() {
   };
 
   // Check existing submission for this user+period
-  const { data: existing } = await supabase.from('submissions')
+  const { data: existing } = await db.from('submissions')
     .select('id').eq('user_id', currentUser.id).eq('period_key', periodKey).maybeSingle();
 
   let subId;
   if (existing) {
-    await supabase.from('submissions').update(subData).eq('id', existing.id);
-    await supabase.from('submission_entries').delete().eq('submission_id', existing.id);
+    await db.from('submissions').update(subData).eq('id', existing.id);
+    await db.from('submission_entries').delete().eq('submission_id', existing.id);
     subId = existing.id;
   } else {
-    const { data: ins } = await supabase.from('submissions').insert(subData).select('id').single();
+    const { data: ins } = await db.from('submissions').insert(subData).select('id').single();
     subId = ins?.id;
   }
 
@@ -961,7 +961,7 @@ async function submitForm() {
 
   // Insert entries
   const allEntries = [...entries,...newEntries].map(e=>({...e, submission_id:subId, user_id:currentUser.id}));
-  await supabase.from('submission_entries').insert(allEntries);
+  await db.from('submission_entries').insert(allEntries);
 
   hideLoading();
   toast(`Report submitted! ${entries.length} products + ${newEntries.length} new entries.`,'success');
@@ -975,7 +975,7 @@ async function renderMyReports() {
   const el = document.getElementById('view-myreports');
   el.innerHTML = `<div class="page-title">My Reports</div><div class="page-sub">Your submitted competition reports</div><div id="mr-list"><div style="text-align:center;padding:40px;color:var(--grey4)">Loading...</div></div>`;
 
-  const { data } = await supabase.from('submissions')
+  const { data } = await db.from('submissions')
     .select('*').eq('user_id', currentUser.id).order('submitted_at',{ascending:false});
 
   const list = document.getElementById('mr-list');
@@ -1007,9 +1007,9 @@ async function renderDashboard() {
   const periodKey = `${currentPeriod.month}_${currentPeriod.year}_${currentPeriod.fortnight}`;
 
   const [{ data: subs }, { data: profiles }, { data: entries }] = await Promise.all([
-    supabase.from('submissions').select('*').eq('period_key', periodKey),
-    supabase.from('profiles').select('*').eq('role','field'),
-    supabase.from('submission_entries').select('*').eq('period_key', periodKey)
+    db.from('submissions').select('*').eq('period_key', periodKey),
+    db.from('profiles').select('*').eq('role','field'),
+    db.from('submission_entries').select('*').eq('period_key', periodKey)
   ]);
 
   const submitted = subs?.length||0;
@@ -1139,7 +1139,7 @@ async function renderAllSubs() {
     </div>
     <div id="subs-list"><div style="text-align:center;padding:40px;color:var(--grey4)">Loading...</div></div>`;
 
-  const { data: subs } = await supabase.from('submissions')
+  const { data: subs } = await db.from('submissions')
     .select('*').order('submitted_at',{ascending:false});
 
   const periods = [...new Set((subs||[]).map(s=>s.period_key))];
@@ -1183,8 +1183,8 @@ function filterSubs() {
 // DETAIL MODAL
 // ══════════════════════════════════════════════════════════════════════
 async function openDetail(subId) {
-  const { data: sub } = await supabase.from('submissions').select('*').eq('id',subId).single();
-  const { data: entries } = await supabase.from('submission_entries').select('*').eq('submission_id',subId).order('category');
+  const { data: sub } = await db.from('submissions').select('*').eq('id',subId).single();
+  const { data: entries } = await db.from('submission_entries').select('*').eq('submission_id',subId).order('category');
   if (!sub||!entries) return;
   detailSubData = {sub,entries};
 
@@ -1250,7 +1250,7 @@ async function renderIntel() {
   const el = document.getElementById('view-intel');
   el.innerHTML = `<div class="page-title">🆕 New Market Intelligence</div><div class="page-sub">New brands and companies reported by field team</div><div style="text-align:center;padding:40px;color:var(--grey4)">Loading...</div>`;
 
-  const { data } = await supabase.from('submission_entries').select(`
+  const { data } = await db.from('submission_entries').select(`
     *, submissions(full_name, town, period_month, period_year, submitted_at)
   `).eq('is_new_product', true).order('created_at',{ascending:false});
 
@@ -1312,7 +1312,7 @@ async function renderIntel() {
 // ══════════════════════════════════════════════════════════════════════
 async function renderUsers() {
   const el = document.getElementById('view-users');
-  const { data } = await supabase.from('profiles').select('*').order('full_name');
+  const { data } = await db.from('profiles').select('*').order('full_name');
   el.innerHTML = `
     <div class="page-title">👥 User Management</div>
     <div class="page-sub">All registered portal users</div>
