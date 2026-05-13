@@ -117,6 +117,15 @@ body{font-family:'Inter',sans-serif;background:var(--grey1);color:var(--text);mi
 .main-area{flex:1;overflow-y:auto;padding:24px}
 .view{display:none}
 .view.active{display:block}
+.skeleton{background:linear-gradient(90deg,var(--grey2) 25%,var(--grey3) 50%,var(--grey2) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-line{height:14px;margin-bottom:8px}
+.sk-card{height:80px;border-radius:12px;margin-bottom:12px}
+.refresh-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+  padding:5px 12px;border-radius:8px;color:rgba(255,255,255,0.6);font-size:11px;
+  cursor:pointer;transition:all .2s;margin-left:auto}
+.refresh-btn:hover{background:rgba(200,146,42,0.2);border-color:var(--gold);color:var(--gold-lt)}
 
 /* ── COMPONENTS ── */
 .page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
@@ -519,39 +528,48 @@ async function startup() {
     return;
   }
 
-  // Check existing session
-  const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    await loadProfile(session.user);
-  } else {
-    showScreen('screen-login');
-  }
-
-  // Auth state listener
+  // Single auth handler — onAuthStateChange handles INITIAL_SESSION automatically
+  // This fires immediately with existing session so no need for separate getSession call
+  let profileLoaded = false;
   db.auth.onAuthStateChange(async (event, session) => {
-    console.log('Auth event:', event, session ? 'session exists' : 'no session');
-    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-      await loadProfile(session.user);
+    if (event === 'INITIAL_SESSION') {
+      if (session?.user) {
+        if (!profileLoaded) {
+          profileLoaded = true;
+          await loadProfile(session.user);
+        }
+      } else {
+        hideLoading();
+        showScreen('screen-login');
+      }
+    } else if (event === 'SIGNED_IN') {
+      if (!profileLoaded) {
+        profileLoaded = true;
+        await loadProfile(session.user);
+      }
     } else if (event === 'SIGNED_OUT') {
+      profileLoaded = false;
+      currentUser = null;
+      currentProfile = null;
       showScreen('screen-login');
+    } else if (event === 'TOKEN_REFRESHED') {
+      // Session token refreshed silently — update currentUser, no UI change needed
+      if (session?.user) currentUser = session.user;
     }
   });
 }
 
 async function loadProfile(user) {
-  showLoading('Loading your profile...');
+  // Show app shell immediately — no blocking overlay
+  showScreen('screen-app');
 
-  // Try fetching profile — retry once after 1s in case insert is still propagating
+  // Fetch profile
   let data, error;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await db.from('profiles').select('*').eq('id', user.id).single();
-    data = res.data; error = res.error;
-    if (data) break; // got it
-    if (attempt < 2) await new Promise(r => setTimeout(r, 1000)); // wait 1s and retry
-  }
+  const res = await db.from('profiles').select('*').eq('id', user.id).single();
+  data = res.data; error = res.error;
 
+  // If not found, auto-create from signup metadata
   if (!data) {
-    // Profile genuinely missing — try to create it from auth metadata
     const meta = user.user_metadata || {};
     const profilePayload = {
       id: user.id,
@@ -564,23 +582,24 @@ async function loadProfile(user) {
       profilePayload, { onConflict: 'id' }
     );
     if (!insErr) {
-      // Re-fetch after creating
       const res2 = await db.from('profiles').select('*').eq('id', user.id).single();
       data = res2.data;
     } else {
-      console.error('Auto-create profile error:', insErr.message);
+      console.error('Profile create error:', insErr.message);
     }
   }
 
   if (!data) {
-    hideLoading();
     showScreen('screen-login');
-    showError('Profile not found. Please sign up first or contact your administrator. (Error: ' + (error?.message||'unknown') + ')');
+    showError('Profile not found. Please sign up first. (' + (error?.message||'unknown') + ')');
     return;
   }
 
   currentUser = user;
   currentProfile = data;
+
+  // Cache profile for instant reuse
+  sessionStorage.setItem('cached_profile', JSON.stringify(data));
 
   // Load saved period
   const sp = localStorage.getItem('period');
@@ -592,11 +611,10 @@ async function loadProfile(user) {
   document.getElementById('tb-role').textContent = roleLabel(data.role);
   updatePeriodBadge();
 
-  // Build nav
+  // Build nav and go to default view
   buildNav();
   hideLoading();
-  showScreen('screen-app');
-  navigateTo('entry');
+  navigateTo(currentProfile.role === 'field' ? 'entry' : 'dashboard');
 }
 
 function roleLabel(r) {
@@ -737,24 +755,44 @@ function buildNav() {
   ).join('');
 }
 
-function navigateTo(view) {
+// Track which views have been rendered and when (for smart cache invalidation)
+const viewCache = {};
+const VIEW_TTL = { dashboard: 60000, allsubs: 30000, intel: 60000, users: 120000,
+                   myreports: 30000, entry: 0 }; // 0 = always re-render entry form
+
+function navigateTo(view, forceRefresh = false) {
   currentView = view;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const viewEl = document.getElementById('view-'+view);
-  const navEl = document.getElementById('nav-'+view);
+  const navEl  = document.getElementById('nav-'+view);
   if (viewEl) viewEl.classList.add('active');
-  if (navEl) navEl.classList.add('active');
+  if (navEl)  navEl.classList.add('active');
+
+  // Check if cached version is still fresh
+  const ttl = VIEW_TTL[view] ?? 0;
+  const lastRender = viewCache[view] || 0;
+  const isFresh = ttl > 0 && (Date.now() - lastRender) < ttl;
+
+  if (!forceRefresh && isFresh) {
+    return; // Use cached DOM — no re-fetch needed
+  }
+
+  // Render and record timestamp
+  viewCache[view] = Date.now();
   renderView(view);
 }
 
+// Add refresh button to views that support it
+function refreshView() { navigateTo(currentView, true); }
+
 async function renderView(view) {
-  if (view==='entry') await renderEntry();
+  if (view==='entry')     await renderEntry();
   else if (view==='myreports') await renderMyReports();
   else if (view==='dashboard') await renderDashboard();
-  else if (view==='allsubs') await renderAllSubs();
-  else if (view==='intel') await renderIntel();
-  else if (view==='users') await renderUsers();
+  else if (view==='allsubs')   await renderAllSubs();
+  else if (view==='intel')     await renderIntel();
+  else if (view==='users')     await renderUsers();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1091,7 +1129,10 @@ async function renderDashboard() {
 
   el.innerHTML = `
     <div class="page-title">Dashboard</div>
-    <div class="page-sub">${currentPeriod.month} ${currentPeriod.year} · ${currentPeriod.fortnight} · Click 📅 in topbar to change period</div>
+    <div class="page-sub" style="display:flex;align-items:center;gap:10px">
+      <span>${currentPeriod.month} ${currentPeriod.year} · ${currentPeriod.fortnight} · Click 📅 in topbar to change period</span>
+      <button onclick="refreshView()" style="background:var(--grey2);border:1.5px solid var(--grey3);padding:5px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;color:var(--grey4)" title="Refresh data">↻ Refresh</button>
+    </div>
 
     <div class="kpi-row">
       <div class="kpi kpi-navy"><div class="kpi-label">Field Team</div><div class="kpi-val">${total}</div><div class="kpi-hint">Registered field persons</div><div class="kpi-ico">👥</div></div>
@@ -1386,17 +1427,18 @@ function toast(msg, type='info') {
 
 // Startup — wait for both DOM and Supabase library to be fully ready
 function safeStartup() {
-  // Check Supabase library is loaded AND createClient is available
   if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
     setTimeout(safeStartup, 100);
     return;
   }
+  // Show initial loading only on first page load
+  showLoading('Starting up...');
   startup().catch(function(e) {
+    hideLoading();
     console.error('Startup error:', e);
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f1f3d;color:white;flex-direction:column;gap:16px;font-family:sans-serif;text-align:center;padding:24px"><div style="font-size:48px">⚠️</div><div style="font-size:20px;font-weight:700">Portal loading error</div><div style="color:rgba(255,255,255,0.6);font-size:14px">Error: ' + e.message + '</div><button onclick="location.reload()" style="padding:12px 24px;background:#c8922a;border:none;border-radius:8px;color:#0f1f3d;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">Reload Page</button></div>';
   });
 }
-// Always wait for DOM first, then check Supabase
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() { setTimeout(safeStartup, 50); });
 } else {
